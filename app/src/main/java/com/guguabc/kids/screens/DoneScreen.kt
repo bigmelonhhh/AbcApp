@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -36,8 +41,16 @@ import com.guguabc.kids.design.components.IllustrationCircle
 import com.guguabc.kids.design.components.ParentGateButton
 import com.guguabc.kids.design.components.PrimaryButton
 import com.guguabc.kids.design.guguClick
+import kotlinx.coroutines.delay
 
-/** design.md §6.5 ⑤ 今天真棒（3:244）。家长卡数据全部来自运行时。 */
+/**
+ * design.md §6.5 ⑤ 今天真棒（3:244）。
+ * design_v2.md §6：贴纸墙仍是本轮 3 词；贴纸册入口用绝对定位叠加，
+ * 不参与 Column 布局，V1 五屏所有元素坐标零改动。
+ *
+ * 2026-11-09 交互修复（附录⑦）：额度耗尽时点「再玩一次」，复用家长小结卡第三行
+ * 临时显示 2 秒提示，零新增元素、零坐标变化，静态基准图不受影响。
+ */
 @Composable
 fun DoneScreen(
     learnedWords: List<Word>,
@@ -46,7 +59,16 @@ fun DoneScreen(
     onReplay: () -> Unit,
     onRest: () -> Unit,
     onParentGate: () -> Unit,
+    onStickerBook: () -> Unit,
 ) {
+    var showTimeUp by remember { mutableStateOf(false) }
+    LaunchedEffect(showTimeUp) {
+        if (showTimeUp) {
+            delay(2_000L)
+            showTimeUp = false
+        }
+    }
+
     GuguScreenContainer(background = GuguTheme.colors.background, tag = "screen_done") {
         Row(
             modifier = Modifier
@@ -97,6 +119,7 @@ fun DoneScreen(
                     textStyle = GuguType.replayButton,
                     tag = "btn_replay",
                     enabled = replayEnabled,
+                    onDisabledClick = { showTimeUp = true },
                     onClick = onReplay,
                 )
 
@@ -133,9 +156,23 @@ fun DoneScreen(
                         ),
                         GuguType.parentData,
                     )
-                    GuguText(Strings.PARENT_CARD_HINT, GuguType.parentHint)
+                    GuguText(
+                        if (showTimeUp) Strings.TIME_UP_HINT else Strings.PARENT_CARD_HINT,
+                        GuguType.parentHint,
+                    )
                 }
             }
+        }
+
+        // V2 新增：绝对定位入口，不占 Column 空间
+        Box(
+            modifier = Modifier
+                .offset(GuguDimens.stickerBookEntryX, GuguDimens.stickerBookEntryY)
+                .size(GuguDimens.stickerBookEntryWidth, GuguDimens.stickerBookEntryHeight)
+                .guguClick(tag = "btn_sticker_book", onClick = onStickerBook),
+            contentAlignment = Alignment.Center,
+        ) {
+            GuguText(Strings.STICKER_BOOK_ENTRY, GuguType.stickerBookEntry)
         }
 
         Box(

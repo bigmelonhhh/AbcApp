@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.guguabc.kids.R
 import com.guguabc.kids.data.Strings
+import com.guguabc.kids.data.WordPack
 import com.guguabc.kids.data.Words
 import com.guguabc.kids.design.GuguColor
 import com.guguabc.kids.design.GuguDimens
@@ -34,13 +35,19 @@ import com.guguabc.kids.design.components.IllustrationCircle
 import com.guguabc.kids.design.components.ParentGateButton
 import com.guguabc.kids.design.components.PrimaryButton
 
-/** design.md §6.1 ① 首页 · 横屏双栏（3:240）。 */
+/**
+ * design.md §6.1 ① 首页 · 横屏双栏（3:240）。
+ * design_v2.md §6：课程标题与三词头像按课包动态；基准课保留 V1 逐字文案，
+ * 保证 5 张像素基准图继续可复现。
+ */
 @Composable
 fun HomeScreen(
+    pack: WordPack,
     onStart: () -> Unit,
     onParentGate: () -> Unit,
 ) {
     GuguScreenContainer(background = GuguTheme.colors.background, tag = "screen_home") {
+        val isBaseline = pack.id == Words.DEFAULT_PACK_ID
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(GuguDimens.statusBarSpace)) // 顶部 36dp 空白，不绘制状态栏
 
@@ -118,13 +125,19 @@ fun HomeScreen(
                             verticalArrangement = Arrangement.SpaceBetween,
                         ) {
                             GuguText(Strings.LESSON_LABEL, GuguType.lessonLabel)
-                            GuguText(Strings.LESSON_TITLE, GuguType.lessonTitle)
-                            GuguText(Strings.LESSON_META, GuguType.lessonMeta)
+                            GuguText(
+                                if (isBaseline) Strings.LESSON_TITLE else pack.title,
+                                GuguType.lessonTitle,
+                            )
+                            GuguText(
+                                if (isBaseline) Strings.LESSON_META else Strings.LESSON_META_SHORT,
+                                GuguType.lessonMeta,
+                            )
                         }
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.homeAvatarGap)) {
-                        Words.all.forEach { word ->
+                        pack.words.forEach { word ->
                             IllustrationCircle(
                                 circleSize = GuguDimens.homeAvatarSize,
                                 imageSize = GuguDimens.homeAvatarSize,

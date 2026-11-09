@@ -12,6 +12,10 @@ captures/
 .cxx/
 __pycache__/
 
+# 工具链缓存 / 暂存产物（脚本可重新下载或重新生成，不入库）
+app/tools/fontsrc/
+app/tools/v2_build/
+
 # 其它
 .DS_Store
 *.log

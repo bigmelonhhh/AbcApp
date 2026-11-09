@@ -92,6 +92,17 @@ object GuguType {
     val panelLabel = cn(20, FontWeight.W400, GuguColor.textSecondary)
     val panelValue = cn(20, FontWeight.W500, GuguColor.onSurface)
     val panelClose = cn(20, FontWeight.W500, GuguColor.parentTitle)
+
+    // V2 · 贴纸册（design_v2.md §5.1）
+    val stickerBookTitle = cn(40, FontWeight.W700, GuguColor.onSurface)
+    val stickerBookHint = cn(22, FontWeight.W400, GuguColor.textTertiary)
+    val stickerBookEntry = cn(24, FontWeight.W500, GuguColor.parentTitle)
+
+    // V2 · 家长课程包列表（design_v2.md §5.2）
+    val packNo = cn(18, FontWeight.W400, GuguColor.textTertiary)
+    val packName = cn(20, FontWeight.W500, GuguColor.onSurface)
+    val packL2 = cn(18, FontWeight.W400, GuguColor.parentHint)
+    val ttsNotice = cn(16, FontWeight.W400, GuguColor.textTertiary)
 }
 
 object GuguDimens {
@@ -226,6 +237,41 @@ object GuguDimens {
     val panelPadding = 28.dp
     val panelGap = 16.dp
     val panelBottom = 64.dp
+
+    // V2 · 贴纸册 6 列 × 4 行单屏铺满（修正 §5.1 的 4×6：后者高 1040dp 超出 800dp 画布）
+    const val stickerBookColumns = 6
+    val stickerBookCell = 128.dp
+    val stickerBookGap = 16.dp
+    val stickerBookRadius = 28.dp
+    val stickerBookArt = 104.dp
+    val stickerBookTitleY = 44.dp
+    val stickerBookHintGap = 8.dp
+    val stickerBookGridGap = 32.dp
+    val stickerBookBackX = 48.dp
+    val stickerBookBackY = 44.dp
+    val stickerBookLockedAlpha = 0.28f
+
+    // V2 · DONE 页贴纸册入口：绝对定位，不参与 Column 布局，V1 五屏元素坐标零改动
+    val stickerBookEntryX = 96.dp
+    val stickerBookEntryY = 690.dp
+    val stickerBookEntryWidth = 580.dp
+    val stickerBookEntryHeight = 40.dp
+
+    // V2 · 家长面板课程包列表
+    val panelWidthV2 = 720.dp
+    val panelHeight = 420.dp
+    val packRowHeight = 56.dp
+    val packRowRadius = 16.dp
+    val packRowGap = 10.dp
+    val packRowPadding = 12.dp
+    val packRowStroke = 1.dp
+    val packAvatar = 32.dp
+
+    // 2026-11-09 交互修复：按钮禁用态 / 家长门长按反馈（design_v2.md 附录⑦⑧）
+    val disabledAlpha = 0.32f
+    val disabledTextAlpha = 0.6f
+    val parentGateRingWidth = 6.dp
+    const val parentGateHoldMs = 1500L
 }
 
 /** design.md §4.3：颜色、透明度、dy 必须精确；blur 为 Figma radius。 */

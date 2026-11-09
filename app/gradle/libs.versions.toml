@@ -7,6 +7,18 @@ activityCompose = "1.9.3"
 coreKtx = "1.13.1"
 datastore = "1.1.1"
 coroutines = "1.8.1"
+junit = "4.13.2"
+# androidx.test 全家族必须同一代（2024 稳定组）：monitor 1.7.x 把接口静态方法的
+# 伴随类由 ActivityInvoker$-CC 改名为 ActivityInvoker$$CC，core 若停在 1.5.0 会在运行时
+# 抛 NoClassDefFoundError。显式锁定成套版本，避免传递依赖把旧 core/espresso 拉回来。
+# runner 固定 1.6.1 而非 1.6.2：后者要 monitor 1.7.2，会与 debugRuntimeClasspath
+# 解析出的 strictly 1.7.1 冲突（Gradle consistent resolution）。
+androidxTestCore = "1.6.1"
+androidxTestMonitor = "1.7.1"
+androidxTestRunner = "1.6.1"
+androidxTestRules = "1.6.1"
+androidxTestExtJunit = "1.2.1"
+androidxTestEspresso = "3.6.1"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -19,6 +31,19 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+# 测试（2026-11-09 测试体系补齐）：版本只在此锁定，禁止 alpha/beta。
+# ui-test-* 由 Compose BOM 统一管理，不单独写版本号。
+junit4 = { group = "junit", name = "junit", version.ref = "junit" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+androidx-test-monitor = { group = "androidx.test", name = "monitor", version.ref = "androidxTestMonitor" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidxTestEspresso" }
+compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

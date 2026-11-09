@@ -52,4 +52,26 @@ object Strings {
     const val MINUTES_5 = "5 分钟"
     const val STATE_ON = "开"
     const val STATE_OFF = "关"
+
+    // V2 · 首页（基准课沿用上面的 V1 文案，保证 5 张像素基准图可复现）
+    const val LESSON_META_SHORT = "3 个新词 · 约 2 分钟"
+
+    // V2 · 完成页贴纸册入口
+    const val STICKER_BOOK_ENTRY = "看看我的贴纸册"
+
+    // V2 · 贴纸册
+    const val STICKER_BOOK_TITLE = "我的动物朋友"
+    const val STICKER_BOOK_HINT = "点一点，再听一次"
+
+    // V2 · 家长课程包列表
+    const val PARENT_PANEL_TODAY_PACK = "今日课程"
+    val PACK_NO = "第 %1${'$'}d 课"
+    const val PACK_LEVEL_L2 = "大朋友"
+    const val TTS_NOTICE_LINE = "单词发音由电脑合成"
+
+    // 2026-11-09 交互修复（design_v2.md 附录「交互修复决议」⑤⑦⑧）
+    const val TIME_UP_HINT = "今天的 5 分钟用完啦，家长可重置"
+    const val RESET_TODAY = "重置今日时长"
+    const val RESET_DONE = "已重置"
+    const val PARENT_GATE_HINT = "长按右上角「家长」2 秒可打开设置"
 }

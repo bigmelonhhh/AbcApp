@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -29,6 +30,10 @@ import com.guguabc.kids.design.guguClick
 /**
  * design.md §5：全圆角黄底 + shadowPrimary；文字色 #4A3423。
  * 高度由调用方传入，组件内部不写死；宽度可指定或填满父容器。
+ *
+ * 2026-11-09 交互修复（design_v2.md 附录⑦）：禁用态仍接收点击并分流到
+ * onDisabledClick 给一次可见提示，不再用 clickable(enabled=false) 把点击整个吞掉。
+ * 禁用态视觉只在交互时出现，V1 五张像素基准图拍的都是启用态，不受影响。
  */
 @Composable
 fun PrimaryButton(
@@ -42,6 +47,7 @@ fun PrimaryButton(
     gap: Dp = GuguDimens.homeStartGap,
     tag: String? = null,
     enabled: Boolean = true,
+    onDisabledClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(height / 2)
@@ -56,13 +62,19 @@ fun PrimaryButton(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    if (enabled) GuguColor.primary else GuguColor.primary.copy(alpha = 0.45f),
+                    if (enabled) GuguColor.primary
+                    else GuguColor.primary.copy(alpha = GuguDimens.disabledAlpha),
                     shape,
                 )
-                .guguClick(tag = tag, enabled = enabled, onClick = onClick),
+                .guguClick(tag = tag) {
+                    if (enabled) onClick() else onDisabledClick?.invoke()
+                },
             contentAlignment = Alignment.Center,
         ) {
             Row(
+                // 启用态不挂任何 alpha modifier，保证 V1 五张像素基准零渲染差异
+                modifier = if (enabled) Modifier
+                else Modifier.alpha(GuguDimens.disabledTextAlpha),
                 horizontalArrangement = Arrangement.spacedBy(gap),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

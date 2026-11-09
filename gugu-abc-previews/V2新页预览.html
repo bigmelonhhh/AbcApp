@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>咕咕 ABC · V2 新增页版面规格预览（已落地）</title>
+<style>
+  :root{
+    --bg:#FFFAF0; --primary:#FFC857; --coral:#FF8C7A; --sky:#6BB6E0;
+    --mint:#7DD3A0; --ink:#4A3423; --sub:#8A7561; --ter:#9A876F;
+    --divider:#E8DDC8; --cream:#FFF1CC; --parent:#E4F3FB;
+    --parentTitle:#3F7E9E; --parentHint:#6A93A8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#EFE9DE;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif;color:var(--ink);padding:32px}
+  header{max-width:1320px;margin:0 auto 24px}
+  h1{font-size:24px;margin-bottom:6px}
+  .lead{font-size:14px;color:#6b5c48;line-height:1.7}
+  .tag{display:inline-block;background:var(--primary);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-right:8px}
+  .section{max-width:1320px;margin:28px auto 0}
+  .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
+  .section-head h2{font-size:18px}
+  .section-head span{font-size:13px;color:#6b5c48}
+  .stage{width:1280px;height:800px;transform:scale(.75);transform-origin:top left;position:relative}
+  .frame{width:960px;height:600px;overflow:hidden;border-radius:12px;box-shadow:0 10px 34px rgba(74,52,35,.18);background:var(--bg);position:relative}
+  .board{width:1280px;height:800px;background:var(--bg);position:relative}
+
+  /* ---------- 页 1 贴纸册：6 列 × 4 行单屏 ---------- */
+  .back{position:absolute;left:48px;top:44px;width:72px;height:72px;border-radius:50%;
+    background:#fff;box-shadow:0 6px 14px rgba(255,199,87,.4);display:flex;align-items:center;justify-content:center}
+  .back svg{width:32px;height:32px}
+  .book-head{position:absolute;top:44px;left:0;right:0;text-align:center}
+  .book-head h3{font-size:40px;font-weight:800;letter-spacing:1px}
+  .book-head p{font-size:22px;color:var(--ter);margin-top:8px}
+  .grid{position:absolute;left:216px;top:160px;display:grid;grid-template-columns:repeat(6,128px);gap:16px}
+  .cell{width:128px;height:128px;border-radius:28px;background:#fff;
+    box-shadow:0 8px 18px rgba(255,199,89,.20);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .cell img{width:104px;height:104px;object-fit:contain}
+  .cell.locked img{filter:grayscale(1);opacity:.28}
+  .cell.locked{background:#E8DDC8}
+  .cell .idlabel{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;color:#B9A88F;font-family:monospace}
+  .cell.locked .idlabel{color:#C9BCA7}
+
+  /* ---------- 页 2 家长课程包列表 ---------- */
+  .home-ghost{position:absolute;inset:0;background:var(--bg)}
+  .ghost-mascot{position:absolute;left:96px;top:220px;width:300px;height:300px;border-radius:50%;background:var(--cream);opacity:.55}
+  .ghost-lesson{position:absolute;right:96px;top:160px;width:480px;height:184px;border-radius:40px;background:#fff;opacity:.55;box-shadow:0 8px 18px rgba(255,199,89,.16)}
+  .ghost-btn{position:absolute;right:96px;top:400px;width:480px;height:88px;border-radius:44px;background:var(--primary);opacity:.55}
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+  .panel{position:absolute;left:280px;bottom:64px;width:720px;height:420px;border-radius:32px;background:#fff;
+    box-shadow:0 -8px 40px rgba(74,52,35,.18);padding:28px;overflow:hidden}
+  .panel-scroll{height:100%;overflow:auto;padding-right:8px}
+  .panel-scroll::-webkit-scrollbar{width:6px}
+  .panel-scroll::-webkit-scrollbar-thumb{background:#E8DDC8;border-radius:3px}
+  .panel-title{font-size:28px;font-weight:800;margin-bottom:12px}
+  .panel-label{font-size:20px;color:var(--sub);margin-bottom:8px}
+  .packs{display:flex;flex-direction:column;gap:16px}
+  .pack{height:56px;border-radius:16px;border:1px solid transparent;background:#fff;display:flex;align-items:center;gap:10px;padding:0 12px;flex:none}
+  .pack.active{background:var(--cream);border-color:var(--primary)}
+  .pack .no{font-size:18px;color:var(--ter);width:66px;flex:none}
+  .pack .title{font-size:20px;font-weight:600;flex:1}
+  .pack .lvl{font-size:18px;color:var(--parentHint)}
+  .avatars{display:flex;gap:4px}
+  .avatars img{width:32px;height:32px;object-fit:contain;display:block}
+  .settings{margin-top:16px;display:flex;flex-direction:column;gap:12px;font-size:20px;color:var(--sub)}
+  .settings .row{display:flex;justify-content:space-between}
+  .notice{font-size:16px;color:var(--ter);margin-top:8px}
+  .close-line{margin-top:12px;text-align:center;font-size:20px;color:var(--parentTitle);font-weight:600}
+
+  table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff;border-radius:10px;overflow:hidden;font-size:13px}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid #F0EADD;vertical-align:top}
+  th{background:#FBF6EC;color:#6b5c48;font-weight:700;width:180px}
+  tr:last-child td,tr:last-child th{border-bottom:none}
+  code{background:#F5EFE4;padding:1px 6px;border-radius:4px;font-size:12px}
+  .note{margin-top:14px;padding:14px 18px;background:#FFF8E8;border-left:4px solid var(--primary);border-radius:6px;font-size:13px;line-height:1.8}
+</style>
+</head>
+<body>
+<header>
+  <h1>咕咕 ABC · V2 新增页版面规格预览（已落地）</h1>
+  <p class="lead"><span class="tag">V2.0 实现版</span>基准 1280 × 800 dp（等比缩放至 960 × 600 展示）· 24 张插画已全部落位 ·
+  与 <code>design_v2.md</code> 实现附录一致 · V1 <code>design.md</code> 正文冻结</p>
+</header>
+
+<div class="section">
+  <div class="section-head"><h2>① 贴纸册 · StickerBookScreen</h2><span>6 列 × 4 行 = 24 格，格 128×128 / gap 16，总 848×560dp，单屏铺满</span></div>
+  <div class="frame"><div class="stage"><div class="board">
+    <div class="back"><svg viewBox="0 0 24 24" fill="none" stroke="#4A3423" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="book-head"><h3>我的动物朋友</h3><p>点一点，再听一次</p></div>
+    <div class="grid" id="grid"></div>
+  </div></div></div>
+  <table>
+    <tr><th>容器 / 底色</th><td><code>screen_sticker_book</code> · #FFFAF0 · 无底部导航、无滚动</td></tr>
+    <tr><th>返回 / 标题</th><td><code>RoundIconButton</code> 72dp @ (48,44)；标题 40sp Bold #4A3423；副标题 22sp #9A876F</td></tr>
+    <tr><th>贴纸格</th><td>128×128 / 圆角 28 / #FFFFFF / <code>shadowSticker</code>；插画 104×104 <code>ContentScale.Fit</code></td></tr>
+    <tr><th>未解锁态</th><td><code>alpha=0.28</code> + #E8DDC8 底，点击禁用；<b>不显示问号、锁、数量、进度条</b></td></tr>
+    <tr><th>交互</th><td>点已解锁 → 播 <code>word_&lt;id&gt;.ogg</code> + 100ms 缩放；点未解锁 → 无反应、不提示</td></tr>
+    <tr><th>布局修正</th><td>原规格 4 列 × 6 行需 1040dp 高，超出 800dp 画布；改为 <b>6×4 单屏</b>，幼儿无需滚动</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>② 家长课程包列表 · 家长门面板内</h2><span>非全屏新页；720×420dp 卡片，8 行单列，卡片内整体滚动</span></div>
+  <div class="frame"><div class="stage"><div class="board">
+    <div class="home-ghost">
+      <div class="ghost-mascot"></div><div class="ghost-lesson"></div><div class="ghost-btn"></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="panel"><div class="panel-scroll">
+      <div class="panel-title">家长设置</div>
+      <div class="panel-label">今日课程</div>
+      <div class="packs" id="packs"></div>
+      <div class="settings">
+        <div class="row"><span>每日时长上限</span><span>5 分钟</span></div>
+        <div class="row"><span>音效</span><span>开</span></div>
+        <div class="row"><span>今日已玩 2 分钟</span><span></span></div>
+      </div>
+      <div class="notice">单词发音由电脑合成</div>
+      <div class="close-line">关闭</div>
+    </div></div>
+  </div></div></div>
+  <table>
+    <tr><th>承载</th><td>V1 家长门底部卡片：宽 520 → <b>720dp</b>、高 <b>420dp</b>，圆角 32，#FFFFFF，40% 黑遮罩</td></tr>
+    <tr><th>课程行</th><td>8 行单列，每行 56dp / 圆角 16；选中 <code>#FFF1CC</code> + 1dp <code>#FFC857</code> 描边</td></tr>
+    <tr><th>行内容</th><td><code>第 N 课</code> 18sp #9A876F + 主题名 20sp #4A3423 + 3 个 32dp 真实小头像</td></tr>
+    <tr><th>L2 标识</th><td>第 7/8 课右侧 18sp #6A93A8「大朋友」；<b>无锁定态、无解锁条件</b></td></tr>
+    <tr><th>写入 / 关闭</th><td>点行 → <code>currentPackId</code> 存 DataStore → 关面板 → 回首页；8s 无操作自动关闭</td></tr>
+    <tr><th>合规</th><td>合成语音告知只出现在家长侧，宝宝侧五屏与贴纸册均无此文案</td></tr>
+  </table>
+  <div class="note">
+    <b>预览状态</b>：24 张插画均为工程内真实资源（<code>gugu-abc-android-assets/illustrations/</code>），
+    此处示意「已完成第 1 课」的解锁态——前 3 格亮起，其余 21 格灰阶。灰阶不是设计稿里的空位，
+    实际 App 会按 <code>learnedWordIds</code> 逐格点亮。浏览器预览使用系统字体回落，
+    工程内以子集化 Noto Sans SC / Fredoka Bold 为准。
+  </div>
+</div>
+
+<script>
+const words=["cat","dog","bear","pig","cow","duck","rabbit","sheep","horse","fish","frog","bird","fox","monkey","deer","lion","tiger","panda","elephant","giraffe","zebra","owl","turtle","butterfly"];
+const zh={"cat":"小猫","dog":"小狗","bear":"小熊","pig":"小猪","cow":"奶牛","duck":"小鸭","rabbit":"兔子","sheep":"绵羊","horse":"马","fish":"小鱼","frog":"青蛙","bird":"小鸟","fox":"狐狸","monkey":"猴子","deer":"鹿","lion":"狮子","tiger":"老虎","panda":"熊猫","elephant":"大象","giraffe":"长颈鹿","zebra":"斑马","owl":"猫头鹰","turtle":"乌龟","butterfly":"蝴蝶"};
+const base='../gugu-abc-android-assets/illustrations/img_';
+const grid=document.getElementById('grid');
+words.forEach((w,i)=>{
+  const d=document.createElement('div');
+  d.className='cell'+(i>=3?' locked':'');
+  d.innerHTML='<img src="'+base+w+'.png" alt="'+zh[w]+'"><div class="idlabel">'+w+'</div>';
+  grid.appendChild(d);
+});
+const packs=[
+  ["身边的小伙伴",["cat","dog","bear"],"L1"],["农场里",["pig","cow","duck"],"L1"],
+  ["草地上",["rabbit","sheep","horse"],"L1"],["池塘边",["fish","frog","bird"],"L1"],
+  ["树林里",["fox","monkey","deer"],"L1"],["动物园",["lion","tiger","panda"],"L1"],
+  ["大个子朋友",["elephant","giraffe","zebra"],"L2"],["特别的朋友",["owl","turtle","butterfly"],"L2"]
+];
+const box=document.getElementById('packs');
+packs.forEach((p,i)=>{
+  const d=document.createElement('div');
+  d.className='pack'+(i===0?' active':'');
+  const av=p[1].map(w=>'<img src="'+base+w+'.png" alt="">').join('');
+  d.innerHTML='<span class="no">第 '+(i+1)+' 课</span><span class="title">'+p[0]+'</span>'+
+    (p[2]==='L2'?'<span class="lvl">大朋友</span>':'<span class="avatars">'+av+'</span>');
+  box.appendChild(d);
+});
+</script>
+</body>
+</html>

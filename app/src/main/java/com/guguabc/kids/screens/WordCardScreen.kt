@@ -25,6 +25,7 @@ import com.guguabc.kids.design.GuguShadowBox
 import com.guguabc.kids.design.GuguText
 import com.guguabc.kids.design.GuguTheme
 import com.guguabc.kids.design.GuguType
+import com.guguabc.kids.design.guguClick
 import com.guguabc.kids.design.components.GuguScreenContainer
 import com.guguabc.kids.design.components.IllustrationCircle
 import com.guguabc.kids.design.components.PrimaryButton
@@ -97,7 +98,18 @@ fun WordCardScreen(
                     tag = "btn_sound",
                     onClick = onSound,
                 )
-                GuguText(Strings.SOUND_HINT, GuguType.soundHint)
+                // 「点一下，听发音」本身就是点击指引，整行都要能点：
+                // 3 岁宝宝常照着文字位置下手，只让上方圆钮可点会造成「点了没反应」。
+                // 与 ListenQuizScreen 的提示条做法一致；不加 padding、不改字号，
+                // 视觉与 design.md §6.2 完全一致，不影响 1:1 像素验收。
+                Box(
+                    modifier = Modifier
+                        .width(GuguDimens.cardRightWidth)
+                        .guguClick(tag = "btn_sound_hint", onClick = onSound),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    GuguText(Strings.SOUND_HINT, GuguType.soundHint)
+                }
                 PrimaryButton(
                     text = Strings.NEXT_CARD,
                     height = GuguDimens.nextButtonHeight,

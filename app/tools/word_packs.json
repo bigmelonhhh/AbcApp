@@ -1,0 +1,71 @@
+{
+  "version": "2.0",
+  "note": "咕咕 ABC V2 24 词动物词库，design_v2.md §2 的机器可读真值源。prepare_assets.py / 词表生成 / 验收脚本共同消费。",
+  "audio": {
+    "engine": "piper-tts",
+    "voice": "en_US-lessac-medium",
+    "license": "MIT (voice model) / GPL-3.0 (engine, generation side only, not shipped in APK)",
+    "lengthScale": 1.3,
+    "sampleRate": 22050,
+    "channels": 1,
+    "format": "ogg-vorbis",
+    "leadSilenceMs": 120,
+    "tailSilenceMs": 120,
+    "peakDbfs": -3.0
+  },
+  "illustration": {
+    "size": [1024, 1024],
+    "mode": "RGBA",
+    "styleAnchor": "img_cat.png",
+    "contentScale": "Fit",
+    "directory": "gugu-abc-android-assets/illustrations"
+  },
+  "distractors": {
+    "rule": "different group, from learned words only, prefer maximal silhouette difference, no repeat within two consecutive quizzes",
+    "forbiddenPairs": [
+      ["lion", "tiger"],
+      ["cat", "lion"],
+      ["dog", "fox"],
+      ["duck", "bird"],
+      ["horse", "zebra"],
+      ["turtle", "frog"]
+    ],
+    "baselineNote": "pack p1_friends keeps V1 in-pack rotation so pixel baselines stay reproducible"
+  },
+  "packs": [
+    { "id": "p1_friends", "no": 1, "title": "身边的小伙伴", "level": "L1", "words": ["cat", "dog", "bear"] },
+    { "id": "p2_farm",    "no": 2, "title": "农场里",       "level": "L1", "words": ["pig", "cow", "duck"] },
+    { "id": "p3_meadow",  "no": 3, "title": "草地上",       "level": "L1", "words": ["rabbit", "sheep", "horse"] },
+    { "id": "p4_pond",    "no": 4, "title": "池塘边",       "level": "L1", "words": ["fish", "frog", "bird"] },
+    { "id": "p5_forest",  "no": 5, "title": "树林里",       "level": "L1", "words": ["fox", "monkey", "deer"] },
+    { "id": "p6_zoo",     "no": 6, "title": "动物园",       "level": "L1", "words": ["lion", "tiger", "panda"] },
+    { "id": "p7_big",     "no": 7, "title": "大个子朋友",   "level": "L2", "words": ["elephant", "giraffe", "zebra"] },
+    { "id": "p8_special", "no": 8, "title": "特别的朋友",   "level": "L2", "words": ["owl", "turtle", "butterfly"] }
+  ],
+  "words": [
+    { "id": "cat",       "en": "Cat",       "zh": "小猫",   "pack": "p1_friends", "level": "L1", "group": "feline",   "anchor": "竖耳+胡须+长尾",   "image": "img_cat.png",       "audio": "word_cat.ogg",       "ttsText": "cat",       "existing": true },
+    { "id": "dog",       "en": "Dog",       "zh": "小狗",   "pack": "p1_friends", "level": "L1", "group": "canine",   "anchor": "垂耳+吐舌",         "image": "img_dog.png",       "audio": "word_dog.ogg",       "ttsText": "dog",       "existing": true },
+    { "id": "bear",      "en": "Bear",      "zh": "小熊",   "pack": "p1_friends", "level": "L1", "group": "chunky",   "anchor": "圆耳+厚实身形",     "image": "img_bear.png",      "audio": "word_bear.ogg",      "ttsText": "bear",      "existing": true },
+    { "id": "pig",       "en": "Pig",       "zh": "小猪",   "pack": "p2_farm",    "level": "L1", "group": "chunky",   "anchor": "猪鼻+卷尾",         "image": "img_pig.png",       "audio": "word_pig.ogg",       "ttsText": "pig",       "existing": false },
+    { "id": "cow",       "en": "Cow",       "zh": "奶牛",   "pack": "p2_farm",    "level": "L1", "group": "chunky",   "anchor": "黑白斑+小角",       "image": "img_cow.png",       "audio": "word_cow.ogg",       "ttsText": "cow",       "existing": false },
+    { "id": "duck",      "en": "Duck",      "zh": "小鸭",   "pack": "p2_farm",    "level": "L1", "group": "bird",     "anchor": "扁黄嘴+蹼",         "image": "img_duck.png",      "audio": "word_duck.ogg",      "ttsText": "duck",      "existing": false },
+    { "id": "rabbit",    "en": "Rabbit",    "zh": "兔子",   "pack": "p3_meadow",  "level": "L1", "group": "tiny",     "anchor": "长耳+短尾",         "image": "img_rabbit.png",    "audio": "word_rabbit.ogg",    "ttsText": "rabbit",    "existing": false },
+    { "id": "sheep",     "en": "Sheep",     "zh": "绵羊",   "pack": "p3_meadow",  "level": "L1", "group": "chunky",   "anchor": "蓬松卷毛",          "image": "img_sheep.png",     "audio": "word_sheep.ogg",     "ttsText": "sheep",     "existing": false },
+    { "id": "horse",     "en": "Horse",     "zh": "马",     "pack": "p3_meadow",  "level": "L1", "group": "slender",  "anchor": "长脸+鬃毛",         "image": "img_horse.png",     "audio": "word_horse.ogg",     "ttsText": "horse",     "existing": false },
+    { "id": "fish",      "en": "Fish",      "zh": "小鱼",   "pack": "p4_pond",    "level": "L1", "group": "aquatic",  "anchor": "尾鳍+流线",         "image": "img_fish.png",      "audio": "word_fish.ogg",      "ttsText": "fish",      "existing": false },
+    { "id": "frog",      "en": "Frog",      "zh": "青蛙",   "pack": "p4_pond",    "level": "L1", "group": "aquatic",  "anchor": "大眼+蹲姿",         "image": "img_frog.png",      "audio": "word_frog.ogg",      "ttsText": "frog",      "existing": false },
+    { "id": "bird",      "en": "Bird",      "zh": "小鸟",   "pack": "p4_pond",    "level": "L1", "group": "bird",     "anchor": "尖喙+展翅",         "image": "img_bird.png",      "audio": "word_bird.ogg",      "ttsText": "bird",      "existing": false },
+    { "id": "fox",       "en": "Fox",       "zh": "狐狸",   "pack": "p5_forest",  "level": "L1", "group": "canine",   "anchor": "尖脸+大尾",         "image": "img_fox.png",       "audio": "word_fox.ogg",       "ttsText": "fox",       "existing": false },
+    { "id": "monkey",    "en": "Monkey",    "zh": "猴子",   "pack": "p5_forest",  "level": "L1", "group": "primate",  "anchor": "长尾+圆耳",         "image": "img_monkey.png",    "audio": "word_monkey.ogg",    "ttsText": "monkey",    "existing": false },
+    { "id": "deer",      "en": "Deer",      "zh": "鹿",     "pack": "p5_forest",  "level": "L1", "group": "slender",  "anchor": "鹿角",              "image": "img_deer.png",      "audio": "word_deer.ogg",      "ttsText": "deer",      "existing": false },
+    { "id": "lion",      "en": "Lion",      "zh": "狮子",   "pack": "p6_zoo",     "level": "L1", "group": "feline",   "anchor": "鬃毛",              "image": "img_lion.png",      "audio": "word_lion.ogg",      "ttsText": "lion",      "existing": false },
+    { "id": "tiger",     "en": "Tiger",     "zh": "老虎",   "pack": "p6_zoo",     "level": "L1", "group": "feline",   "anchor": "橙底黑条纹",        "image": "img_tiger.png",     "audio": "word_tiger.ogg",     "ttsText": "tiger",     "existing": false },
+    { "id": "panda",     "en": "Panda",     "zh": "熊猫",   "pack": "p6_zoo",     "level": "L1", "group": "chunky",   "anchor": "黑白眼圈",          "image": "img_panda.png",     "audio": "word_panda.ogg",     "ttsText": "panda",     "existing": false },
+    { "id": "elephant",  "en": "Elephant",  "zh": "大象",   "pack": "p7_big",     "level": "L2", "group": "giant",    "anchor": "长鼻+大耳",         "image": "img_elephant.png",  "audio": "word_elephant.ogg",  "ttsText": "elephant",  "existing": false },
+    { "id": "giraffe",   "en": "Giraffe",   "zh": "长颈鹿", "pack": "p7_big",     "level": "L2", "group": "slender",  "anchor": "长脖+斑块",         "image": "img_giraffe.png",   "audio": "word_giraffe.ogg",   "ttsText": "giraffe",   "existing": false },
+    { "id": "zebra",     "en": "Zebra",     "zh": "斑马",   "pack": "p7_big",     "level": "L2", "group": "slender",  "anchor": "黑白条纹",          "image": "img_zebra.png",     "audio": "word_zebra.ogg",     "ttsText": "zebra",     "existing": false },
+    { "id": "owl",       "en": "Owl",       "zh": "猫头鹰", "pack": "p8_special", "level": "L2", "group": "bird",     "anchor": "大眼+面盘",         "image": "img_owl.png",       "audio": "word_owl.ogg",       "ttsText": "owl",       "existing": false },
+    { "id": "turtle",    "en": "Turtle",    "zh": "乌龟",   "pack": "p8_special", "level": "L2", "group": "aquatic",  "anchor": "圆壳",              "image": "img_turtle.png",    "audio": "word_turtle.ogg",    "ttsText": "turtle",    "existing": false },
+    { "id": "butterfly", "en": "Butterfly", "zh": "蝴蝶",   "pack": "p8_special", "level": "L2", "group": "tiny",     "anchor": "对称大翅",          "image": "img_butterfly.png", "audio": "word_butterfly.ogg", "ttsText": "butterfly", "existing": false }
+  ]
+}

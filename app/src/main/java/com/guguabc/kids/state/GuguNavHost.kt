@@ -21,10 +21,11 @@ import com.guguabc.kids.screens.CheerScreen
 import com.guguabc.kids.screens.DoneScreen
 import com.guguabc.kids.screens.HomeScreen
 import com.guguabc.kids.screens.ListenQuizScreen
+import com.guguabc.kids.screens.StickerBookScreen
 import com.guguabc.kids.screens.WordCardScreen
 import kotlinx.coroutines.delay
 
-/** design.md §7.1：五屏状态机 + 200ms 淡入淡出，禁止滑动翻页手势。 */
+/** design.md §7.1 + design_v2.md §4：五屏闭环 + 贴纸册，200ms 淡入淡出，禁止滑动翻页手势。 */
 @Composable
 fun GuguNavHost() {
     val context = LocalContext.current
@@ -45,11 +46,12 @@ fun GuguNavHost() {
     // 进 CARD / QUIZ 自动播报一次；QUIZ 10 秒无操作重播一次；进 CHEER 播放庆祝音
     LaunchedEffect(session.route) {
         when (val r = session.route) {
-            is GuguRoute.Card -> session.playWord(Words.all[r.index])
+            is GuguRoute.Card -> session.playWord(Words.of(r.packId).words[r.index])
             is GuguRoute.Quiz -> {
-                session.playWord(Words.all[r.index])
+                val word = Words.of(r.packId).words[r.index]
+                session.playWord(word)
                 delay(10_000L)
-                if (session.route == r) session.playWord(Words.all[r.index])
+                if (session.route == r) session.playWord(word)
             }
             is GuguRoute.Cheer -> session.playCheer()
             else -> Unit
@@ -93,12 +95,13 @@ fun GuguNavHost() {
         ) { route ->
             when (route) {
                 GuguRoute.Home -> HomeScreen(
+                    pack = session.currentPack,
                     onStart = session::start,
                     onParentGate = session::openParentPanel,
                 )
 
                 is GuguRoute.Card -> {
-                    val word = Words.all[route.index]
+                    val word = Words.of(route.packId).words[route.index]
                     WordCardScreen(
                         word = word,
                         cardIndex = route.index,
@@ -111,7 +114,7 @@ fun GuguNavHost() {
                 }
 
                 is GuguRoute.Quiz -> {
-                    val data = session.quizFor(route.index)
+                    val data = session.quizFor(route)
                     ListenQuizScreen(
                         targetWord = data.target,
                         optionA = data.optionA,
@@ -134,12 +137,20 @@ fun GuguNavHost() {
                 )
 
                 GuguRoute.Done -> DoneScreen(
-                    learnedWords = Words.all,
+                    learnedWords = session.currentPack.words,
                     minutesUsed = session.minutesUsed,
                     replayEnabled = session.replayAllowed,
                     onReplay = session::replay,
                     onRest = { activity?.finish() },
                     onParentGate = session::openParentPanel,
+                    onStickerBook = session::openStickerBook,
+                )
+
+                GuguRoute.StickerBook -> StickerBookScreen(
+                    words = Words.all,
+                    learnedIds = session.learnedWordIds,
+                    onPlay = session::playWord,
+                    onBack = session::back,
                 )
             }
         }
