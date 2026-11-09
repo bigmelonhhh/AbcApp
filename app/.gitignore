@@ -1,0 +1,12 @@
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+.DS_Store
+captures/
+.externalNativeBuild
+.cxx
+tools/screenshots/
+build_final.log
+__pycache__/

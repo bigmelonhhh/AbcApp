@@ -1,0 +1,17 @@
+# WorkBuddy 本地工作数据（不入库）
+.workbuddy/
+
+# Android / Gradle 构建产物与本机配置（app/.gitignore 内已有同名规则，此处做全局兜底）
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+__pycache__/
+
+# 其它
+.DS_Store
+*.log

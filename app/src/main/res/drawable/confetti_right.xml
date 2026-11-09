@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp" android:height="360dp"
+    android:viewportWidth="180" android:viewportHeight="360">
+    <group android:translateX="138" android:translateY="28">
+        <path android:fillColor="#6BB6E0"
+              android:pathData="M 0 12 a 12 12 0 1 0 24 0 a 12 12 0 1 0 -24 0 Z" />
+    </group>
+    <group android:translateX="31" android:translateY="101">
+        <path android:fillColor="#FF8C7A"
+              android:pathData="M 0 9 a 9 9 0 1 0 18 0 a 9 9 0 1 0 -18 0 Z" />
+    </group>
+    <group android:translateX="110" android:translateY="200">
+        <path android:fillColor="#FFC857"
+              android:pathData="M 0 10 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0 Z" />
+    </group>
+    <group android:translateX="50" android:translateY="255">
+        <path android:fillColor="#7DD3A0"
+              android:pathData="M 5 0 L 15 0 A 5 5 0 0 1 20 5 L 20 15 A 5 5 0 0 1 15 20 L 5 20 A 5 5 0 0 1 0 15 L 0 5 A 5 5 0 0 1 5 0 Z" />
+    </group>
+    <group android:translateX="147" android:translateY="312">
+        <path android:fillColor="#FF8C7A"
+              android:pathData="M 0 8 a 8 8 0 1 0 16 0 a 8 8 0 1 0 -16 0 Z" />
+    </group>
+    <group android:translateX="97" android:translateY="65">
+        <path android:fillColor="#FF8C7A"
+              android:pathData="M13 0L17 8L26 9L19.5 15.5L21 24.5L13 20L5 24.5L6.5 15.5L0 9L9 8L13 0Z" />
+    </group>
+</vector>
