@@ -6,6 +6,15 @@ package com.guguabc.kids.data
  * 运行时数据用 %1$s / %1$d 占位，由 SessionState 传入，不得写死。
  */
 object Strings {
+    const val EXPLORE_TITLE = "今天想认识什么？"
+    const val CHOOSE_LESSON = "选一组，开始认识吧"
+    const val HOME = "首页"
+    const val PARENT = "家长"
+    const val MY_STICKERS = "我的贴纸"
+    const val MORE_LESSONS = "更多朋友 →"
+    const val MORE_ANIMALS = "更多动物 →"
+    const val PREVIOUS_LESSONS = "← 前一页"
+    const val CHOOSE_ANOTHER = "← 换一组"
 
     // ① 首页
     const val HOME_GREETING = "早上好呀"
@@ -22,7 +31,7 @@ object Strings {
     const val NEXT_CARD = "下一张"
 
     // ③ 听一听
-    val QUIZ_TITLE = "哪只是 %1${'$'}s ？"
+    val QUIZ_TITLE = "哪个是 %1${'$'}s ？"
     const val QUIZ_HINT = "点一点你听到的那个"
     const val QUIZ_FOOTER = "听不清就再点一次 · 选错不扣分，只会再放一遍"
 
@@ -40,7 +49,7 @@ object Strings {
     const val REST = "休息啦"
     const val PARENT_CARD_TITLE = "给爸爸妈妈"
     val PARENT_CARD_DATA = "今天 %1${'$'}d 分钟 · 认识 %2${'$'}s"
-    const val PARENT_CARD_HINT = "长按右上角「家长」可设置每日时长"
+    const val PARENT_CARD_HINT = "点击右上角「家长」可设置每日时长"
     const val DONE_BADGE = "今天到这里"
 
     // 家长门最小设置面板（§7.5，样式由实现侧补充，无新增页面）
@@ -60,7 +69,7 @@ object Strings {
     const val STICKER_BOOK_ENTRY = "看看我的贴纸册"
 
     // V2 · 贴纸册
-    const val STICKER_BOOK_TITLE = "我的动物朋友"
+    const val STICKER_BOOK_TITLE = "我的贴纸"
     const val STICKER_BOOK_HINT = "点一点，再听一次"
 
     // V2 · 家长课程包列表
@@ -73,5 +82,4 @@ object Strings {
     const val TIME_UP_HINT = "今天的 5 分钟用完啦，家长可重置"
     const val RESET_TODAY = "重置今日时长"
     const val RESET_DONE = "已重置"
-    const val PARENT_GATE_HINT = "长按右上角「家长」2 秒可打开设置"
 }

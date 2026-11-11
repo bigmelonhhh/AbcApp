@@ -22,6 +22,12 @@ object QuizPicker {
     val GROUP_RANK: Map<String, Int> = mapOf(
         "aquatic" to 0, "tiny" to 1, "bird" to 2, "primate" to 3,
         "feline" to 4, "canine" to 5, "slender" to 6, "chunky" to 7, "giant" to 8,
+        "round_fruit" to 0, "long_fruit" to 5, "cluster_fruit" to 2,
+        "berry" to 3, "melon" to 7,
+        "small_vehicle" to 0, "long_vehicle" to 3, "cycle" to 7,
+        "rail" to 1, "aircraft" to 5, "watercraft" to 8,
+        "drinkware" to 0, "cutlery" to 7, "tableware" to 3,
+        "brush" to 8, "cloth" to 2, "footwear" to 5,
     )
 
     /** design_v2.md §3.4 / word_packs.json distractors.forbiddenPairs。 */
@@ -37,6 +43,7 @@ object QuizPicker {
      */
     fun candidates(pack: WordPack, target: Word, learnedIds: Set<String>): List<Word> {
         val learned = learnedIds.mapNotNull(Words::byId)
+            .filter { Words.of(it.packId).category == pack.category }
         val pool = (pack.words + learned).distinctBy { it.id }
         val rank = GROUP_RANK[target.group] ?: 0
         return pool.filter { w ->

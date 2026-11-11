@@ -4,10 +4,10 @@
 咕咕 ABC · 静态走查（design.md §11 + design_v2.md §10）
 
 用法：python tools/verify_project.py
-不依赖真机 / adb；V1 五屏 1:1 约束继续冻结，V2 词表与资源一律以
+不依赖真机 / adb；V2 分类首页取代旧首页，学习页沿用原设计，V2 词表与资源一律以
 app/tools/word_packs.json 为唯一真值源，不在本脚本里写死清单。
 
-真机像素比对另由 verify_screens.py 完成（5 张 V1 基准图保持不变）。
+真机像素比对另由 verify_screens.py 完成（旧首页基准不再适用于 V2）。
 """
 from __future__ import annotations
 
@@ -86,6 +86,45 @@ def rgba_corners_clear(path: Path) -> bool:
                for x in range(int(w * 0.85), w))
 
 
+def generated_alpha_clear(path: Path) -> bool:
+    w, h, kind = png_ihdr(path)
+    if kind != 6 or w != h or w < 512:
+        return False
+    data = path.read_bytes()
+    pos, chunks = 8, []
+    while pos < len(data):
+        n = struct.unpack(">I", data[pos:pos + 4])[0]
+        if data[pos + 4:pos + 8] == b"IDAT":
+            chunks.append(data[pos + 8:pos + 8 + n])
+        pos += n + 12
+    raw = zlib.decompress(b"".join(chunks))
+    stride, previous, pos = w * 4, bytearray(w * 4), 0
+    clear = opaque = 0
+    for y in range(h):
+        ft = raw[pos]
+        row = bytearray(raw[pos + 1:pos + 1 + stride])
+        pos += stride + 1
+        for x in range(stride):
+            a = row[x - 4] if x >= 4 else 0
+            b = previous[x]
+            c = previous[x - 4] if x >= 4 else 0
+            if ft == 1: row[x] = (row[x] + a) & 255
+            elif ft == 2: row[x] = (row[x] + b) & 255
+            elif ft == 3: row[x] = (row[x] + ((a + b) // 2)) & 255
+            elif ft == 4:
+                p = a + b - c
+                pa, pb, pc = abs(p-a), abs(p-b), abs(p-c)
+                row[x] = (row[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+            elif ft != 0: return False
+        alphas = row[3::4]
+        # Imagegen may leave sub-1% alpha from antialiasing at a corner.
+        if y in (0, h - 1) and (alphas[0] > 2 or alphas[-1] > 2): return False
+        clear += alphas.count(0)
+        opaque += sum(a > 200 for a in alphas)
+        previous = row
+    return clear > w*h*0.15 and opaque > w*h*0.05
+
+
 def main() -> int:
     src = kt_text()
     code = "\n".join(strip_comments(p.read_text(encoding="utf-8")) for p in all_kt())
@@ -157,9 +196,9 @@ def main() -> int:
         "点一下，听发音", "下一张", "点一点你听到的那个",
         "听不清就再点一次 · 选错不扣分，只会再放一遍", "答对啦！", "再玩一个",
         "没有「答错」，只有再听一次", "今天真棒！", "再玩一次", "休息啦",
-        "给爸爸妈妈", "长按右上角「家长」可设置每日时长", "今天到这里",
+        "给爸爸妈妈", "点击右上角「家长」可设置每日时长", "今天到这里",
         # V2
-        "3 个新词 · 约 2 分钟", "看看我的贴纸册", "我的动物朋友",
+        "3 个新词 · 约 2 分钟", "看看我的贴纸册", "我的贴纸",
         "点一点，再听一次", "今日课程", "大朋友", "单词发音由电脑合成",
     ]
     missing_strings = [s for s in required_strings if s not in strings]
@@ -200,9 +239,9 @@ def main() -> int:
                 continue
             cmap = TTFont(str(RES / "font" / name)).getBestCmap()
             miss += [f"{name}:{c}" for c in need if ord(c) not in cmap]
-        check("#6 中文字体无缺字（V2 24 词）", not miss, ", ".join(miss[:6]))
+        check("#6 中文字体无缺字（V2 42 词）", not miss, ", ".join(miss[:6]))
     except ImportError:
-        check("#6 中文字体无缺字（V2 24 词）", True, "fontTools 不可用，跳过")
+        check("#6 中文字体无缺字（V2 42 词）", True, "fontTools 不可用，跳过")
 
     # ---- #10 #11 图标 ----
     vectors = sorted(p.stem for p in (RES / "drawable").glob("*.xml"))
@@ -217,18 +256,18 @@ def main() -> int:
           not any((RES / "drawable" / (e + ".xml")).exists() for e in excluded))
     used = set(re.findall(r"R\.drawable\.(\w+)", src))
     unused = [i for i in expected_icons if i not in used]
-    check("#11 每个图标都有使用点", not unused, ", ".join(unused))
+    check("#11 保留学习流程图标，旧首页图标允许留档", not (set(unused) - {"ic_play", "ic_parent"}), ", ".join(unused))
     check("#10 无 ContentScale.Crop", "ContentScale.Crop" not in code)
 
     # ---- 插画 / 音频：按 JSON 驱动 ----
     expected_images = sorted(["ic_gugu_mascot.png"] + [w["image"] for w in words])
     illustrations = sorted(p.name for p in (RES / "drawable-nodpi").glob("*.png"))
-    check("#10 25 张插画按 24 词表落盘", illustrations == expected_images,
+    check("#10 43 张插画按 42 词表落盘", illustrations == expected_images,
           ",".join(set(illustrations) ^ set(expected_images)))
 
     expected_ogg = sorted(["cheer.ogg", "tap.ogg"] + [w["audio"] for w in words])
     ogg = sorted(p.name for p in (RES / "raw").glob("*.ogg"))
-    check("#14 26 条本地 OGG（24 词 + cheer/tap）", ogg == expected_ogg,
+    check("#14 44 条本地 OGG（42 词 + cheer/tap）", ogg == expected_ogg,
           ",".join(set(ogg) ^ set(expected_ogg)))
     check("#14 OGG 头正确", all((RES / "raw" / n).read_bytes()[:4] == b"OggS" for n in ogg))
     check("#14 无 TTS / 网络音频",
@@ -243,20 +282,20 @@ def main() -> int:
           and "else playWord(target)" in src
           and "答错" not in session_kt.split("fun pick")[1].split("fun continueFromCheer")[0])
     check("#15 防连点 400ms / CHEER 1.2s", "400L" in src and "1_200L" in src)
-    check("#16 家长门长按 1500ms", "1500L" in src and "parentGateHoldMs" in src)
+    check("#16 家长入口点击打开", "guguClick(tag = tag, onClick = onOpen)" in read("design/components/ParentGateButton.kt"))
 
     # ---- #12 testTag ----
     tags = ["screen_home", "screen_card", "screen_quiz", "screen_cheer", "screen_done",
-            "btn_start", "btn_next", "btn_continue", "btn_replay", "btn_rest",
+            "screen_lessons", "btn_next", "btn_continue", "btn_replay", "btn_rest",
             "btn_sound", "btn_back", "btn_volume", "btn_parent",
             "option_a", "option_b", "word_en", "word_zh", "progress_dots",
             "sticker_wall", "parent_summary",
-            "screen_sticker_book", "sticker_grid", "btn_sticker_book", "pack_list",
+            "screen_sticker_book", "sticker_grid", "btn_sticker_book", "btn_lesson_page",
             "btn_reset_today"]
     missing_tags = [t for t in tags if f'"{t}"' not in src]
     check("#12 testTag 齐备（V1 + V2）", not missing_tags, ", ".join(missing_tags))
-    check("#V2 家长课程包行 tag 由课号驱动",
-          'tag = "pack_row_${pack.no}"' in read("state/ParentPanel.kt"))
+    check("#V2 宝宝课程卡 tag 由课程 ID 驱动",
+          '"lesson_${pack.id}"' in read("screens/HomeScreen.kt"))
 
     # ================= V2 新增检查 =================
     # ① 词表与 JSON 一致
@@ -279,11 +318,11 @@ def main() -> int:
         for k in ("id", "en", "zh", "pack", "level", "group", "image", "audio"):
             if kt_rows[j][k] != w[k]:
                 errs.append(f"{w['id']}.{k}:{kt_rows[j][k]}≠{w[k]}")
-    check("#V2 24 词表与 JSON 逐项一致", not errs, "; ".join(errs[:5]))
+    check("#V2 42 词表与 JSON 逐项一致", not errs, "; ".join(errs[:5]))
 
-    # ② 8 课分组
+    # ② 14 课分组
     pack_re = re.compile(
-        r'WordPack\((\w+),\s*(\d+),\s*"([^"]+)",\s*"([^"]+)",\s*all\.slice\((\d+)\.\.(\d+)\)\)'
+        r'WordPack\((\w+),\s*(\d+),\s*"([^"]+)",\s*"([^"]+)",\s*all\.slice\((\d+)\.\.(\d+)\),\s*LearningCategory\.\w+\)'
     )
     kt_packs = [(const_to_id.get(a, a), int(b), c, d, int(e), int(f))
                 for a, b, c, d, e, f in pack_re.findall(words_kt)]
@@ -298,13 +337,13 @@ def main() -> int:
             perrs.append(f"{p['id']} 元数据不符")
         if [w["id"] for w in words][kp[4]:kp[5] + 1] != p["words"]:
             perrs.append(f"{p['id']} 三词不符")
-    check("#V2 8 课分组与 JSON 一致", not perrs, "; ".join(perrs[:5]))
+    check("#V2 14 课分组与 JSON 一致", not perrs, "; ".join(perrs[:5]))
 
     # ③ 每词有图有音、anchor 非空
     missing_media = [w["id"] for w in words
                      if not (RES / "drawable-nodpi" / w["image"]).exists()
                      or not (RES / "raw" / w["audio"]).exists()]
-    check("#V2 每词有图有音（24/24）", not missing_media, ",".join(missing_media))
+    check("#V2 每词有图有音（42/42）", not missing_media, ",".join(missing_media))
     empty_anchor = [w["id"] for w in words if not w.get("anchor", "").strip()]
     check("#V2 每词有识别锚点", not empty_anchor, ",".join(empty_anchor))
 
@@ -313,10 +352,14 @@ def main() -> int:
     bad_img = []
     for w in new_images:
         p = RES / "drawable-nodpi" / w["image"]
-        ih = png_ihdr(p)
-        if ih != (1024, 1024, 6) or not rgba_corners_clear(p):
+        if not p.exists():
             bad_img.append(w["image"])
-    check("#V2 21 张新插画 RGBA 透明 / 无水印", not bad_img, ",".join(bad_img[:5]))
+            continue
+        ih = png_ihdr(p)
+        valid = generated_alpha_clear(p) if w.get("assetPipeline") == "imagegen-transparent" else (ih == (1024, 1024, 6) and rgba_corners_clear(p))
+        if not valid:
+            bad_img.append(w["image"])
+    check("#V2 新增插画 RGBA 透明背景", not bad_img, ",".join(bad_img[:5]))
 
     # ⑤ 干扰项跨 group + 禁用组合 + 基准课保留 V1 轮换
     # 2026-11-09 测试体系补齐时规则抽到 QuizPicker.kt（纯逻辑，可被 JVM 单测执行），
@@ -339,14 +382,15 @@ def main() -> int:
           all(f"val packId: String" in read("state/GuguRoute.kt") for _ in [0])
           and read("state/GuguRoute.kt").count("packId: String") == 3)
 
-    # ⑥ 贴纸册 24 格单屏
+    # ⑥ 贴纸册按分类单屏
     book = read("screens/StickerBookScreen.kt")
     cols = re.search(r"stickerBookColumns\s*=\s*(\d+)", tokens)
-    cell = re.search(r"stickerBookCell\s*=\s*(\d+)\.dp", tokens)
+    cell = re.search(r"menuStickerCell\s*=\s*(\d+)\.dp", tokens)
     gap = re.search(r"stickerBookGap\s*=\s*(\d+)\.dp", tokens)
-    rows = (len(words) + int(cols.group(1)) - 1) // int(cols.group(1)) if cols else 0
+    max_category_words = max(sum(len(p["words"]) for p in packs if p["category"] == c["id"]) for c in data["categories"])
+    rows = (max_category_words + int(cols.group(1)) - 1) // int(cols.group(1)) if cols else 0
     grid_h = rows * int(cell.group(1)) + (rows - 1) * int(gap.group(1)) if (cell and gap) else 9999
-    check("#V2 贴纸册 24 格单屏可放下（≤800dp）",
+    check("#V2 贴纸册按分类单屏可放下（≤800dp）",
           bool(cols) and "chunked(GuguDimens.stickerBookColumns)" in book
           and 'testTag("sticker_grid")' in book and grid_h <= 800,
           f"{cols.group(1) if cols else '?'} 列 × {rows} 行，网格高 {grid_h}dp")
@@ -355,16 +399,19 @@ def main() -> int:
           'enabled = unlocked' in book_code and 'ic_lock' not in book_code
           and "问号" not in book_code)
 
-    # ⑦ 选课只在家长侧
+    # ⑦ 四分类自主选课，家长设置不再混放课程。
     panel = read("state/ParentPanel.kt")
-    screens_code = "\n".join(strip_comments(p.read_text(encoding="utf-8"))
-                             for p in (JAVA / "screens").rglob("*.kt"))
-    check("#V2 选课只在家长侧（宝宝侧无课程表）",
-          "Words.packs.forEach" in panel and "onSelectPack(pack.id)" in panel
-          and "onSelectPack = session::selectPack" in panel
-          and "selectPack" not in screens_code and "Words.packs" not in screens_code)
-    check("#V2 家长面板 8 行 + 合成语音告知",
-          panel.count("pack_row_") >= 1 and "Strings.TTS_NOTICE_LINE" in panel)
+    home = read("screens/HomeScreen.kt")
+    check("#V2 四分类与课程均由同一目录生成",
+          len(data["categories"]) == 4 and "LearningCategory.entries" in home
+          and "Words.inCategory(category)" in home)
+    check("#V2 宝宝直接选课、家长仅管理设置",
+          "onSelect(pack.id)" in home and "onSelectPack" not in panel
+          and "Strings.TTS_NOTICE_LINE" in panel)
+    check("#V2 新选课入口受同一每日额度保护",
+          "!canStartLesson()" in session_kt.split("fun startPack(")[1].split("fun chooseAnotherLesson")[0])
+    from generate_catalog import render
+    check("#V2 生成词库与 JSON 完整一致（含分类）", words_kt == render())
 
     # ⑧ 学习进度只存本地
     prefs = read("state/Prefs.kt")
@@ -381,8 +428,8 @@ def main() -> int:
     check("#V2 合成语音告知随包",
           notice.exists() and all(k in notice_txt for k in ("电脑合成", "MIT", "Piper", "不联网")))
     pipeline = (ROOT / "tools" / "prepare_v2_assets.py").read_text(encoding="utf-8")
-    sizes = [(RES / "raw" / w["audio"]).stat().st_size for w in words]
-    check("#V2 24 条发音规格（OGG/体积/归一化）",
+    sizes = [(RES / "raw" / w["audio"]).stat().st_size if (RES / "raw" / w["audio"]).exists() else 0 for w in words]
+    check("#V2 42 条发音规格（OGG/体积/归一化）",
           "TARGET_PEAK" in pipeline and "LEAD_MS" in pipeline and "TAIL_MS" in pipeline
           and all(3000 <= s <= 20000 for s in sizes),
           f"体积 {min(sizes)}–{max(sizes)} B")
@@ -417,7 +464,8 @@ def main() -> int:
     check("#FIX 贴纸册 / 首页不被上限踢回",
           "GuguRoute.StickerBook" not in tick_block
           and "GuguRoute.Home" not in tick_block
-          and session_code.count("route = GuguRoute.Done") == 1)
+          # 只约束被动计时；主动点击超时学习入口进入 DONE 是合法跳转。
+          and "if (!isLearning) return TickResult(timeUp = false" in tick_block)
     check("#FIX 旧口径超额时长一次性归零（幂等）",
           "storedSeconds > TIME_LIMIT_SECONDS" in budget_code
           and "coerceAtLeast(0)" in budget_code
@@ -432,12 +480,10 @@ def main() -> int:
           and "onDisabledClick = { showTimeUp = true }" in done
           and "Strings.TIME_UP_HINT" in done
           and "2_000L" in done)
-    check("#FIX 家长门按住有进度反馈 / 短按有提示",
-          "LaunchedEffect(holding)" in gate
-          and "drawArc(" in gate
-          and "Strings.PARENT_GATE_HINT" in gate
-          and "parentGateHoldMs" in gate
-          and "withTimeoutOrNull" not in gate)
+    check("#FIX 家长入口无需长按、无旧提示与进度圈",
+          "guguClick(tag = tag, onClick = onOpen)" in gate
+          and "pointerInput" not in gate and "LaunchedEffect" not in gate
+          and "Toast" not in gate and "drawArc" not in gate)
     check("#FIX 家长面板自动关闭留足操作时间", "20_000L" in panel)
 
     # ---- 2026-11-09 追加：单词卡「点一下，听发音」修复 ----
@@ -478,14 +524,14 @@ def main() -> int:
     check("#TEST 业务规则由纯逻辑层承载且被单测直接引用",
           "QuizPicker" in test_code and "TimeBudget" in test_code
           and "QuizPicker.pick(" in session_kt and "budget.tick(" in session_kt)
-    check("#TEST 单测覆盖 8 课全组合与 300s 上限",
+    check("#TEST 单测覆盖 14 课全组合与 300s 上限",
           "Words.packs.forEach" in test_code
           and "repeat(TIME_LIMIT_SECONDS" in test_code
           and "@Test" in test_code)
     check("#TEST UI 测试覆盖 5 屏 + 贴纸册 + 家长面板 + 家长门",
           all(k in test_code for k in (
               "screen_home", "screen_card", "screen_quiz", "screen_cheer", "screen_done",
-              "screen_sticker_book", "pack_row_", "btn_parent", "btn_replay",
+              "screen_sticker_book", "screen_lessons", "btn_parent", "btn_replay",
           )))
     check("#TEST 中文工程路径下单测 classpath 有 ASCII 兜底",
           "gugu-abc-unit-test" in gradle and "stageUnitTestClasses" in gradle)
@@ -503,7 +549,7 @@ def main() -> int:
     print("-" * 74)
     print(f"共 {len(results)} 项，失败 {fails} 项")
     print("说明：#3/#4/#7/#20 的像素、坐标、圆角、包围盒需连接荣耀平板 X9 后"
-          "用 verify_screens.py + Layout Inspector 验收；V1 五张基准图未改动。")
+          "用 verify_screens.py + Layout Inspector 验收；V2 首页与选课页另行截图验收。")
     return 1 if fails else 0
 
 

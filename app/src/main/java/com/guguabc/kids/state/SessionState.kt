@@ -1,12 +1,15 @@
 package com.guguabc.kids.state
 
 import android.content.Context
+import androidx.annotation.RawRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.guguabc.kids.R
+import com.guguabc.kids.audio.AudioOutput
 import com.guguabc.kids.audio.AudioPlayer
 import com.guguabc.kids.data.Word
+import com.guguabc.kids.data.LearningCategory
 import com.guguabc.kids.data.WordPack
 import com.guguabc.kids.data.Words
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +29,7 @@ const val TIME_LIMIT_SECONDS = 5 * 60
 class GuguSession(
     private val context: Context,
     private val scope: CoroutineScope,
+    private val player: AudioOutput = AudioPlayer(context),
 ) {
     var route: GuguRoute by mutableStateOf(GuguRoute.Home)
         private set
@@ -41,10 +45,12 @@ class GuguSession(
         private set
     var learnedWordIds: Set<String> by mutableStateOf(emptySet())
         private set
+    var isReady: Boolean by mutableStateOf(false)
+        private set
 
-    private val player = AudioPlayer(context)
     private val budget = TimeBudget()
     private val history = ArrayDeque<GuguRoute>()
+    private var foreground = false
     /** 每次开新一课 / 再玩一次时 +1，让干扰项确定性轮换，避免连续两次同题同干扰项。 */
     private var sessionSeed = 0
 
@@ -54,7 +60,7 @@ class GuguSession(
 
     val currentPack: WordPack get() = Words.of(currentPackId)
     val minutesUsed: Int get() = budget.minutesUsed
-    val replayAllowed: Boolean get() = budget.replayAllowed
+    val replayAllowed: Boolean get() = isReady && usedSeconds < TIME_LIMIT_SECONDS
     val isTimeUp: Boolean get() = budget.isTimeUp
 
     init {
@@ -67,12 +73,37 @@ class GuguSession(
             currentPackId = Words.of(stored.currentPackId).id
             learnedWordIds = stored.learnedWordIds
             player.setEnabled(stored.soundEnabled)
+            isReady = true
             persist()
         }
     }
 
     // ---- 流程 ----
+    fun openCategory(category: LearningCategory) = navigate(GuguRoute.Lessons(category))
+
+    fun pageLessons(page: Int) {
+        val current = route as? GuguRoute.Lessons ?: return
+        val lastPage = (Words.inCategory(current.category).size - 1) / 4
+        route = current.copy(page = page.coerceIn(0, lastPage))
+    }
+
+    fun startPack(packId: String) {
+        if (Words.packs.none { it.id == packId } || !canStartLesson()) return
+        currentPackId = packId
+        sessionSeed++
+        persist()
+        navigate(GuguRoute.Card(0, packId))
+    }
+
+    fun chooseAnotherLesson() {
+        history.clear()
+        history.addLast(GuguRoute.Home)
+        route = GuguRoute.Lessons(currentPack.category)
+        player.stop()
+    }
+
     fun start() {
+        if (!canStartLesson()) return
         sessionSeed++
         navigate(GuguRoute.Card(0, currentPackId))
     }
@@ -118,16 +149,28 @@ class GuguSession(
     fun replay() {
         // UI 层在禁用态把点击分流到「今天的 5 分钟用完啦」提示，不会走到这里；
         // 此处保留一道防御，避免任何路径绕过每日时长上限。
-        if (!replayAllowed) return
+        if (!canStartLesson()) return
         sessionSeed++
         history.clear()
         navigate(GuguRoute.Card(0, currentPackId))
     }
 
+    /** 恢复完成前不进入学习；每个入口先校正日期，再检查同一份每日额度。 */
+    private fun canStartLesson(): Boolean {
+        if (!isReady) return false
+        updateBudget(isLearning = false)
+        if (!budget.isTimeUp) return true
+        history.clear()
+        route = GuguRoute.Done
+        player.stop()
+        return false
+    }
+
     fun openStickerBook() = navigate(GuguRoute.StickerBook)
 
-    /** design_v2.md §4：选课权只在家长侧；选完直接回首页，不新增宝宝侧导航元素。 */
+    /** 兼容原有课程选择调用；V2 宝宝入口使用 startPack。不会重置每日额度。 */
     fun selectPack(packId: String) {
+        if (!isReady) return
         if (Words.packs.none { it.id == packId }) return
         currentPackId = packId
         sessionSeed++
@@ -157,13 +200,26 @@ class GuguSession(
     }
 
     // ---- 音频 ----
-    fun playWord(word: Word) = player.play(word.audioRes)
-    fun playCheer() = player.play(R.raw.cheer)
-    fun onAppStop() = player.stop()
-    fun release() = player.release()
+    private fun playAudio(@RawRes resId: Int) {
+        // 同步拦截生命周期停止后、Compose 副作用取消前的在途播放请求。
+        if (foreground && isReady) player.play(resId)
+    }
+
+    fun playWord(word: Word) = playAudio(word.audioRes)
+    fun playCheer() = playAudio(R.raw.cheer)
+    fun onAppStart() { foreground = true }
+    fun onAppStop() {
+        foreground = false
+        player.stop()
+    }
+    fun release() {
+        foreground = false
+        player.release()
+    }
 
     // ---- 音效开关 / 家长门 ----
     fun toggleSound() {
+        if (!isReady) return
         soundEnabled = !soundEnabled
         player.setEnabled(soundEnabled)
         persist()
@@ -171,7 +227,7 @@ class GuguSession(
 
     fun openParentPanel() {
         parentPanelVisible = true
-        player.play(R.raw.tap)
+        playAudio(R.raw.tap)
     }
 
     fun closeParentPanel() { parentPanelVisible = false }
@@ -183,6 +239,11 @@ class GuguSession(
      * 贴纸册因此可以停留、可以返回，家长选课后也能正常停在首页。
      */
     fun tick() {
+        if (!isReady) return
+        updateBudget(isLearning)
+    }
+
+    private fun updateBudget(isLearning: Boolean) {
         val result = budget.tick(isLearning, LocalDate.now().toString())
         usedSeconds = budget.seconds
         todayDate = budget.date
@@ -199,6 +260,7 @@ class GuguSession(
      * design_v2.md 附录⑤；跨天清零逻辑保持原样。
      */
     fun resetTodayTime() {
+        if (!isReady) return
         budget.reset(LocalDate.now().toString())
         usedSeconds = budget.seconds
         todayDate = budget.date

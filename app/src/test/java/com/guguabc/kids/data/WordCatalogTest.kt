@@ -16,11 +16,19 @@ import org.junit.Test
  * 这里从真实对象出发再锁一遍结构不变量，防止「源码文本对、运行时结构错」。
  */
 class WordCatalogTest {
+    @Test
+    fun fourCategoriesHaveRealLessonsAndMatchingHeroImages() {
+        assertEquals(listOf(8, 2, 2, 2), LearningCategory.entries.map { Words.inCategory(it).size })
+        LearningCategory.entries.forEach { category ->
+            val ids = Words.inCategory(category).flatMap { it.words }.map { it.id }.toSet()
+            assertTrue(ids.containsAll(category.heroIds))
+        }
+    }
 
     @Test
-    fun catalogIs24WordsIn8PacksOf3() {
-        assertEquals(24, Words.all.size)
-        assertEquals(8, Words.packs.size)
+    fun catalogIs42WordsIn14PacksOf3() {
+        assertEquals(42, Words.all.size)
+        assertEquals(14, Words.packs.size)
         Words.packs.forEach { assertEquals("${it.id} 词数不是 3", 3, it.words.size) }
         assertEquals(Words.all, Words.packs.flatMap { it.words })
     }
@@ -29,7 +37,7 @@ class WordCatalogTest {
     fun packsAreNumberedAndLeveled() {
         Words.packs.forEachIndexed { i, pack ->
             assertEquals("第 ${i + 1} 课课号", i + 1, pack.no)
-            assertEquals(if (i < 6) "L1" else "L2", pack.level)
+            assertEquals(if (i in 6..7) "L2" else "L1", pack.level)
             assertTrue(pack.title.isNotBlank())
         }
     }

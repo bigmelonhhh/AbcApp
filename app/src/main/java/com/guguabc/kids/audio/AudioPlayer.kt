@@ -24,7 +24,7 @@ import androidx.annotation.RawRes
  *    开关（设备日志出现 AudioFlinger write blocked / mediaplayer went away）。
  *    用 generation 令牌隔离在途回调，旧回调不会再 release 掉正在播放的新 player。
  */
-class AudioPlayer(private val context: Context) {
+class AudioPlayer(private val context: Context) : AudioOutput {
 
     @Volatile
     var enabled: Boolean = true
@@ -47,12 +47,12 @@ class AudioPlayer(private val context: Context) {
             .setAudioAttributes(attributes)
             .build()
 
-    fun setEnabled(value: Boolean) {
+    override fun setEnabled(value: Boolean) {
         enabled = value
         if (!value) stop()
     }
 
-    fun play(@RawRes resId: Int) {
+    override fun play(@RawRes resId: Int) {
         if (!enabled) {
             Log.d(TAG, "play 跳过：音效开关关闭")
             return
@@ -112,7 +112,7 @@ class AudioPlayer(private val context: Context) {
     }
 
     /** App 退到后台 / 切页 / 重播前：立即停止并释放，并让所有在途回调失效。 */
-    fun stop() {
+    override fun stop() {
         generation++
         val old = current
         current = null                 // 先摘引用，避免回调拿到半释放状态
@@ -130,7 +130,7 @@ class AudioPlayer(private val context: Context) {
         runCatching { audioManager.abandonAudioFocusRequest(focusRequest) }
     }
 
-    fun release() = stop()
+    override fun release() = stop()
 
     private companion object {
         const val TAG = "GuguAudio"

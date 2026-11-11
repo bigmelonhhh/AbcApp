@@ -1,182 +1,153 @@
 package com.guguabc.kids.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import com.guguabc.kids.R
+import com.guguabc.kids.data.LearningCategory
 import com.guguabc.kids.data.Strings
-import com.guguabc.kids.data.WordPack
 import com.guguabc.kids.data.Words
-import com.guguabc.kids.design.GuguColor
-import com.guguabc.kids.design.GuguDimens
-import com.guguabc.kids.design.GuguShadow
-import com.guguabc.kids.design.GuguShadowBox
-import com.guguabc.kids.design.GuguText
-import com.guguabc.kids.design.GuguTheme
-import com.guguabc.kids.design.GuguType
+import com.guguabc.kids.design.*
 import com.guguabc.kids.design.components.GuguScreenContainer
-import com.guguabc.kids.design.components.IllustrationCircle
 import com.guguabc.kids.design.components.ParentGateButton
-import com.guguabc.kids.design.components.PrimaryButton
 
-/**
- * design.md §6.1 ① 首页 · 横屏双栏（3:240）。
- * design_v2.md §6：课程标题与三词头像按课包动态；基准课保留 V1 逐字文案，
- * 保证 5 张像素基准图继续可复现。
- */
+/** Approved V2: picture categories followed by picture-based lesson selection. */
 @Composable
-fun HomeScreen(
-    pack: WordPack,
-    onStart: () -> Unit,
-    onParentGate: () -> Unit,
-) {
-    GuguScreenContainer(background = GuguTheme.colors.background, tag = "screen_home") {
-        val isBaseline = pack.id == Words.DEFAULT_PACK_ID
-        Column(Modifier.fillMaxSize()) {
-            Spacer(Modifier.height(GuguDimens.statusBarSpace)) // 顶部 36dp 空白，不绘制状态栏
-
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(GuguDimens.homePadding),
-                horizontalArrangement = Arrangement.spacedBy(GuguDimens.homeGap),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // 左栏 560dp：问候 / 品牌 / 气泡 / 咕咕
-                Column(
-                    modifier = Modifier
-                        .width(GuguDimens.homeLeftWidth)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(
-                        GuguDimens.homeLeftGap, Alignment.CenterVertically
-                    ),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        GuguText(Strings.HOME_GREETING, GuguType.homeGreeting)
-                        Spacer(Modifier.height(GuguDimens.homeBrandGap))
-                        GuguText(Strings.BRAND, GuguType.homeBrand)
-                    }
-
-                    GuguShadowBox(
-                        spec = GuguShadow.cardSm,
-                        shape = RoundedCornerShape(GuguDimens.homeBubbleRadius),
-                        modifier = Modifier.wrapContentSize(),
-                    ) {
-                        Box(
-                            Modifier
-                                .background(
-                                    GuguTheme.colors.surface,
-                                    RoundedCornerShape(GuguDimens.homeBubbleRadius),
-                                )
-                                .padding(GuguDimens.homeBubblePadding),
-                        ) {
-                            GuguText(Strings.MASCOT_BUBBLE, GuguType.homeBubble)
+fun HomeScreen(onCategory: (LearningCategory) -> Unit, onStickerBook: () -> Unit, onParentGate: () -> Unit) {
+    GuguScreenContainer(GuguColor.background, "screen_home") {
+        Column(Modifier.fillMaxSize().padding(GuguDimens.menuPadding)) {
+            MenuHeader(onParentGate = onParentGate)
+            Spacer(Modifier.height(GuguDimens.menuTitleGap))
+            GuguText(Strings.EXPLORE_TITLE, GuguType.categoryHeading, Modifier.align(Alignment.CenterHorizontally))
+            Spacer(Modifier.height(GuguDimens.menuGridTop))
+            Column(verticalArrangement = Arrangement.spacedBy(GuguDimens.menuGridGap)) {
+                LearningCategory.entries.chunked(2).forEach { categories ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.menuGridGap)) {
+                        categories.forEach { category ->
+                            MenuCard(categoryColor(category), "category_${category.id}", Modifier.weight(1f), { onCategory(category) }) {
+                                Row(Modifier.fillMaxSize().padding(GuguDimens.menuCardPadding), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(Modifier.width(GuguDimens.menuHeroWidth).fillMaxHeight()) {
+                                        category.heroIds.forEachIndexed { index, id ->
+                                            Image(painterResource(Words.byId(id)!!.imageRes), null,
+                                                Modifier.align(Alignment.CenterStart).offset(
+                                                    x = GuguDimens.menuHeroOffset * index,
+                                                    y = if (index == 0) -GuguDimens.menuHeroRise else GuguDimens.menuHeroRise,
+                                                ).size(GuguDimens.menuHeroArt), contentScale = ContentScale.Fit)
+                                        }
+                                    }
+                                    Column(verticalArrangement = Arrangement.spacedBy(GuguDimens.menuTextGap)) {
+                                        GuguText(category.title, GuguType.categoryName)
+                                        GuguText(category.english, GuguType.categoryEnglish)
+                                    }
+                                }
+                            }
                         }
                     }
-
-                    IllustrationCircle(
-                        circleSize = GuguDimens.homeMascotCircle,
-                        imageSize = GuguDimens.homeMascotArt,
-                        imageRes = R.drawable.ic_gugu_mascot,
-                        background = GuguColor.cream,
-                    )
                 }
+            }
+            Spacer(Modifier.weight(1f))
+            MenuAction(Strings.MY_STICKERS, "btn_sticker_book", Modifier.align(Alignment.CenterHorizontally).width(GuguDimens.menuAlbumWidth), onStickerBook)
+        }
+    }
+}
 
-                // 右栏 568dp：今日一课 / 三词头像 / 开始玩 / 底部说明
-                Column(
-                    modifier = Modifier
-                        .width(GuguDimens.homeRightWidth)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(
-                        GuguDimens.homeRightGap, Alignment.CenterVertically
-                    ),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-                    val lessonShape = RoundedCornerShape(GuguDimens.homeLessonRadius)
-                    GuguShadowBox(
-                        spec = GuguShadow.cardSm,
-                        shape = lessonShape,
-                        modifier = Modifier
-                            .width(GuguDimens.homeRightWidth)
-                            .height(GuguDimens.homeLessonCardHeight),
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(GuguTheme.colors.surface, lessonShape)
-                                .padding(GuguDimens.homeLessonPadding),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            GuguText(Strings.LESSON_LABEL, GuguType.lessonLabel)
-                            GuguText(
-                                if (isBaseline) Strings.LESSON_TITLE else pack.title,
-                                GuguType.lessonTitle,
-                            )
-                            GuguText(
-                                if (isBaseline) Strings.LESSON_META else Strings.LESSON_META_SHORT,
-                                GuguType.lessonMeta,
-                            )
+@Composable
+fun LessonSelectionScreen(category: LearningCategory, page: Int, onSelect: (String) -> Unit, onPage: (Int) -> Unit, onBack: () -> Unit, onParentGate: () -> Unit) {
+    val pages = Words.inCategory(category).chunked(4)
+    val visiblePacks = pages[page.coerceIn(pages.indices)]
+    val spacious = visiblePacks.size <= 2
+    GuguScreenContainer(GuguColor.background, "screen_lessons") {
+        Column(Modifier.fillMaxSize().padding(GuguDimens.menuPadding)) {
+            MenuHeader(onBack, onParentGate)
+            Spacer(Modifier.height(GuguDimens.menuTitleGap))
+            GuguText(category.heading, GuguType.categoryHeading, Modifier.align(Alignment.CenterHorizontally))
+            GuguText(Strings.CHOOSE_LESSON, GuguType.stickerBookHint, Modifier.align(Alignment.CenterHorizontally))
+            Spacer(Modifier.height(GuguDimens.menuGridTop))
+            if (spacious) Spacer(Modifier.weight(1f))
+            Column(verticalArrangement = Arrangement.spacedBy(GuguDimens.menuGridGap)) {
+                visiblePacks.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.menuGridGap)) {
+                        row.forEach { pack ->
+                            MenuCard(
+                                categoryColor(category), "lesson_${pack.id}", Modifier.weight(1f), { onSelect(pack.id) },
+                                height = if (spacious) GuguDimens.menuFewCardHeight else GuguDimens.menuCardHeight,
+                            ) {
+                                Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                    Row(
+                                        modifier = if (spacious) Modifier.padding(horizontal = GuguDimens.menuCardPadding) else Modifier,
+                                        horizontalArrangement = Arrangement.spacedBy(GuguDimens.menuLessonArtGap),
+                                    ) {
+                                        pack.words.forEach { word ->
+                                            Image(painterResource(word.imageRes), word.zh,
+                                                if (spacious) Modifier.weight(1f).height(GuguDimens.menuFewLessonArt) else Modifier.size(GuguDimens.menuLessonArt),
+                                                contentScale = ContentScale.Fit)
+                                        }
+                                    }
+                                    GuguText(pack.title, GuguType.categoryLesson)
+                                }
+                            }
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            if (pages.size > 1) {
+                Box(Modifier.fillMaxWidth().height(GuguDimens.menuFooterHeight)) {
+                    Row(Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(GuguDimens.menuDotGap)) {
+                        pages.indices.forEach { index ->
+                            Box(Modifier.size(GuguDimens.menuDot).background(if (index == page) GuguColor.primary else GuguColor.divider, CircleShape))
                         }
                     }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.homeAvatarGap)) {
-                        pack.words.forEach { word ->
-                            IllustrationCircle(
-                                circleSize = GuguDimens.homeAvatarSize,
-                                imageSize = GuguDimens.homeAvatarSize,
-                                imageRes = word.imageRes,
-                                background = GuguColor.cream,
-                            )
-                        }
-                    }
-
-                    PrimaryButton(
-                        text = Strings.START,
-                        height = GuguDimens.homeStartHeight,
-                        width = GuguDimens.homeRightWidth,
-                        textStyle = GuguType.startButton,
-                        iconRes = R.drawable.ic_play,
-                        iconSize = GuguDimens.homePlayIcon,
-                        gap = GuguDimens.homeStartGap,
-                        tag = "btn_start",
-                        onClick = onStart,
-                    )
-
-                    GuguText(
-                        text = Strings.HOME_FOOTER,
-                        style = GuguType.footer,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
+                    MenuAction(
+                        if (page == pages.lastIndex) Strings.PREVIOUS_LESSONS else if (category == LearningCategory.ANIMALS) Strings.MORE_ANIMALS else Strings.MORE_LESSONS,
+                        "btn_lesson_page", Modifier.align(Alignment.CenterEnd).width(GuguDimens.menuAlbumWidth),
+                        { onPage(if (page == pages.lastIndex) page - 1 else page + 1) },
                     )
                 }
             }
         }
+    }
+}
 
-        // ABSOLUTE (1140, 48) —— 刻意位于安全区之外，不要居中修正
-        Box(Modifier.offset(GuguDimens.homeParentX, GuguDimens.homeParentY)) {
-            ParentGateButton(
-                size = GuguDimens.homeParentSize,
-                iconRes = R.drawable.ic_parent,
-                iconSize = GuguDimens.homeParentIcon,
-                onOpen = onParentGate,
-            )
-        }
+internal fun categoryColor(category: LearningCategory): Color = when (category) {
+    LearningCategory.ANIMALS -> GuguColor.cream
+    LearningCategory.FRUIT -> GuguColor.fruitCard
+    LearningCategory.VEHICLES -> GuguColor.vehicleCard
+    LearningCategory.EVERYDAY -> GuguColor.everydayCard
+}
+
+@Composable
+private fun MenuHeader(onBack: (() -> Unit)? = null, onParentGate: () -> Unit) {
+    Row(Modifier.fillMaxWidth().height(GuguDimens.menuHeaderHeight), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(GuguDimens.menuHeaderGap)) {
+        if (onBack != null) MenuAction(Strings.HOME, "btn_back", Modifier.width(GuguDimens.menuBackWidth), onBack, GuguColor.surface)
+        Image(painterResource(R.drawable.ic_gugu_mascot), null, Modifier.size(GuguDimens.menuMascot))
+        GuguText(Strings.BRAND, GuguType.categoryBrand)
+        Spacer(Modifier.weight(1f))
+        ParentGateButton(GuguDimens.menuHeaderHeight, R.drawable.ic_parent_sm, GuguDimens.menuParentIcon, label = Strings.PARENT, onOpen = onParentGate)
+    }
+}
+
+@Composable
+private fun MenuCard(color: Color, tag: String, modifier: Modifier, onClick: () -> Unit, height: Dp = GuguDimens.menuCardHeight, content: @Composable BoxScope.() -> Unit) {
+    val shape = RoundedCornerShape(GuguDimens.menuCardRadius)
+    GuguShadowBox(GuguShadow.sticker, shape, modifier.height(height)) {
+        Box(Modifier.fillMaxSize().background(color, shape).guguClick(tag = tag, onClick = onClick), content = content)
+    }
+}
+
+@Composable
+internal fun MenuAction(text: String, tag: String, modifier: Modifier, onClick: () -> Unit, color: Color = GuguColor.primary) {
+    Box(modifier.height(GuguDimens.menuFooterHeight).background(color, RoundedCornerShape(GuguDimens.menuCardRadius)).guguClick(tag = tag, onClick = onClick), contentAlignment = Alignment.Center) {
+        GuguText(text, GuguType.categoryAction)
     }
 }

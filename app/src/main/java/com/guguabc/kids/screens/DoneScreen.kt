@@ -60,6 +60,7 @@ fun DoneScreen(
     onRest: () -> Unit,
     onParentGate: () -> Unit,
     onStickerBook: () -> Unit,
+    onChooseLesson: () -> Unit = {},
 ) {
     var showTimeUp by remember { mutableStateOf(false) }
     LaunchedEffect(showTimeUp) {
@@ -178,10 +179,12 @@ fun DoneScreen(
         Box(
             Modifier
                 .offset(GuguDimens.doneBadgeX, GuguDimens.doneBadgeY)
-                .size(GuguDimens.doneBadgeWidth, GuguDimens.doneBadgeHeight),
+                .size(GuguDimens.doneBadgeWidth, GuguDimens.menuFooterHeight)
+                .background(GuguColor.surface, RoundedCornerShape(GuguDimens.menuCardRadius))
+                .guguClick(tag = "btn_choose_lesson", onClick = onChooseLesson),
             contentAlignment = Alignment.Center,
         ) {
-            GuguText(Strings.DONE_BADGE, GuguType.doneBadge)
+            GuguText(Strings.CHOOSE_ANOTHER, GuguType.categoryAction)
         }
         Box(Modifier.offset(GuguDimens.doneParentX, GuguDimens.doneParentY)) {
             ParentGateButton(

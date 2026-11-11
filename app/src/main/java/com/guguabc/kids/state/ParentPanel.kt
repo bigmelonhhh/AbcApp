@@ -1,8 +1,6 @@
 package com.guguabc.kids.state
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,13 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.guguabc.kids.data.Strings
-import com.guguabc.kids.data.WordPack
-import com.guguabc.kids.data.Words
 import com.guguabc.kids.design.GuguColor
 import com.guguabc.kids.design.GuguDimens
 import com.guguabc.kids.design.GuguText
@@ -44,17 +36,15 @@ import kotlinx.coroutines.delay
 
 /**
  * design.md §7.5 / 附录 C ④ + design_v2.md §5.2 / 附录「交互修复决议」⑤⑥：
- * 长按 1.5s 后的家长面板；课程包列表 8 行在此面板内，宝宝侧不新增课程表。
+ * 点击家长入口打开的面板；仅管理每日时长与声音；宝宝在分类页自主选课。
  * - 「每日时长上限」行改为可点「重置今日时长」，只清时长不清进度；
- * - 自动关闭由 8s 延长到 20s：8 行课包需要滚动，8 秒不足以完成选课 / 重置。
+ * - 自动关闭由 8s 延长到 20s：给家长足够时间查看设置。
  */
 @Composable
 fun ParentPanel(session: GuguSession, onClose: () -> Unit) {
     ParentPanelContent(
-        currentPackId = session.currentPackId,
         soundEnabled = session.soundEnabled,
         minutesUsed = session.minutesUsed,
-        onSelectPack = session::selectPack,
         onResetToday = session::resetTodayTime,
         onToggleSound = session::toggleSound,
         onClose = onClose,
@@ -64,14 +54,12 @@ fun ParentPanel(session: GuguSession, onClose: () -> Unit) {
 /**
  * 家长面板的可测版本：状态与回调全部由参数注入，Compose UI 测试无需构造
  * Context / DataStore / MediaPlayer。生产入口 ParentPanel 只做一层转发，
- * 面板布局、20s 自动关闭、8 行课包、重置提示等行为完全一致。
+ * 面板布局、20s 自动关闭、重置提示等行为完全一致。
  */
 @Composable
 fun ParentPanelContent(
-    currentPackId: String,
     soundEnabled: Boolean,
     minutesUsed: Int,
-    onSelectPack: (String) -> Unit,
     onResetToday: () -> Unit,
     onToggleSound: () -> Unit,
     onClose: () -> Unit,
@@ -121,18 +109,6 @@ fun ParentPanelContent(
             verticalArrangement = Arrangement.spacedBy(GuguDimens.panelGap),
         ) {
             GuguText(Strings.PARENT_PANEL_TITLE, GuguType.panelTitle)
-            GuguText(Strings.PARENT_PANEL_TODAY_PACK, GuguType.panelLabel)
-
-            Column(modifier = Modifier.testTag("pack_list")) {
-                Words.packs.forEach { pack ->
-                    PackRow(
-                        pack = pack,
-                        selected = pack.id == currentPackId,
-                        onClick = { onSelectPack(pack.id) },
-                    )
-                }
-            }
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -194,48 +170,6 @@ fun ParentPanelContent(
                     textAlign = TextAlign.Center,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun PackRow(pack: WordPack, selected: Boolean, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(GuguDimens.packRowRadius)
-    val stroke = if (selected) {
-        Modifier.border(GuguDimens.packRowStroke, GuguColor.primary, shape)
-    } else {
-        Modifier
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(GuguDimens.packRowHeight)
-            .background(
-                if (selected) GuguColor.cream else GuguTheme.colors.surface,
-                shape,
-            )
-            .then(stroke)
-            .padding(horizontal = GuguDimens.packRowPadding)
-            .guguClick(tag = "pack_row_${pack.no}", onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(GuguDimens.packRowGap),
-    ) {
-        GuguText(Strings.PACK_NO.format(pack.no), GuguType.packNo)
-        GuguText(
-            text = pack.title,
-            style = GuguType.packName,
-            modifier = Modifier.weight(1f),
-        )
-        pack.words.forEach { word ->
-            Image(
-                painter = painterResource(word.imageRes),
-                contentDescription = null,
-                modifier = Modifier.size(GuguDimens.packAvatar),
-                contentScale = ContentScale.Fit,
-            )
-        }
-        if (pack.level == "L2") {
-            GuguText(Strings.PACK_LEVEL_L2, GuguType.packL2)
         }
     }
 }

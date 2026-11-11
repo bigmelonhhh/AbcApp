@@ -20,6 +20,7 @@ import com.guguabc.kids.data.Words
 import com.guguabc.kids.screens.CheerScreen
 import com.guguabc.kids.screens.DoneScreen
 import com.guguabc.kids.screens.HomeScreen
+import com.guguabc.kids.screens.LessonSelectionScreen
 import com.guguabc.kids.screens.ListenQuizScreen
 import com.guguabc.kids.screens.StickerBookScreen
 import com.guguabc.kids.screens.WordCardScreen
@@ -30,28 +31,36 @@ import kotlinx.coroutines.delay
 fun GuguNavHost() {
     val context = LocalContext.current
     val activity = context as? ComponentActivity
-    val lifecycle = activity?.lifecycle
     val scope = rememberCoroutineScope()
     val session = remember { GuguSession(context.applicationContext, scope) }
+    GuguNavHost(session, activity?.lifecycle, onRest = { activity?.finish() })
+}
+
+/** 与生产入口共用页面和副作用，允许测试驱动真实生命周期及设备音频边界。 */
+@Composable
+internal fun GuguNavHost(session: GuguSession, lifecycle: Lifecycle?, onRest: () -> Unit) {
 
     // 每日时长计时（跨天清零由 SessionState.tick 处理）；后台不计时长
-    var foreground by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
+    var foreground by remember(lifecycle) {
+        mutableStateOf(lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) == true)
+    }
+    LaunchedEffect(session) {
         while (true) {
             delay(1_000L)
             if (foreground) session.tick()
         }
     }
 
-    // 进 CARD / QUIZ 自动播报一次；QUIZ 10 秒无操作重播一次；进 CHEER 播放庆祝音
-    LaunchedEffect(session.route) {
+    // 后台取消整段自动播报（含 10 秒重播）；回前台从当前页重新开始。
+    LaunchedEffect(session, session.route, foreground, session.isReady) {
+        if (!foreground || !session.isReady) return@LaunchedEffect
         when (val r = session.route) {
             is GuguRoute.Card -> session.playWord(Words.of(r.packId).words[r.index])
             is GuguRoute.Quiz -> {
                 val word = Words.of(r.packId).words[r.index]
                 session.playWord(word)
                 delay(10_000L)
-                if (session.route == r) session.playWord(word)
+                if (foreground && session.route == r) session.playWord(word)
             }
             is GuguRoute.Cheer -> session.playCheer()
             else -> Unit
@@ -69,10 +78,15 @@ fun GuguNavHost() {
     }
 
     // App 退到后台立即停止播放；销毁时释放资源
-    DisposableEffect(lifecycle) {
+    DisposableEffect(session, lifecycle) {
+        foreground = lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) == true
+        if (foreground) session.onAppStart() else session.onAppStop()
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> foreground = true
+                Lifecycle.Event.ON_START -> {
+                    session.onAppStart()
+                    foreground = true
+                }
                 Lifecycle.Event.ON_STOP -> {
                     foreground = false
                     session.onAppStop()
@@ -95,8 +109,17 @@ fun GuguNavHost() {
         ) { route ->
             when (route) {
                 GuguRoute.Home -> HomeScreen(
-                    pack = session.currentPack,
-                    onStart = session::start,
+                    onCategory = session::openCategory,
+                    onStickerBook = session::openStickerBook,
+                    onParentGate = session::openParentPanel,
+                )
+
+                is GuguRoute.Lessons -> LessonSelectionScreen(
+                    category = route.category,
+                    page = route.page,
+                    onSelect = session::startPack,
+                    onPage = session::pageLessons,
+                    onBack = session::back,
                     onParentGate = session::openParentPanel,
                 )
 
@@ -141,14 +164,16 @@ fun GuguNavHost() {
                     minutesUsed = session.minutesUsed,
                     replayEnabled = session.replayAllowed,
                     onReplay = session::replay,
-                    onRest = { activity?.finish() },
+                    onRest = onRest,
                     onParentGate = session::openParentPanel,
                     onStickerBook = session::openStickerBook,
+                    onChooseLesson = session::chooseAnotherLesson,
                 )
 
                 GuguRoute.StickerBook -> StickerBookScreen(
                     words = Words.all,
                     learnedIds = session.learnedWordIds,
+                    initialCategory = session.currentPack.category,
                     onPlay = session::playWord,
                     onBack = session::back,
                 )

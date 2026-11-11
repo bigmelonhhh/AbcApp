@@ -14,8 +14,8 @@ android {
         applicationId = "com.guguabc.kids"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
         // design.md §2：V1 全离线，不引任何跨端框架 / 产品风味
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

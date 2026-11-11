@@ -1,18 +1,20 @@
 """咕咕 ABC V2 资源流水线（纯本地，无网络运行时依赖）。
 
 两件事：
-1. 发音：Piper TTS 离线把 word_packs.json 的 24 个单词合成为 WAV，
+1. 发音：Piper TTS 离线把 word_packs.json 中的单词合成为 WAV，
    裁静音 → 归一化 -3dBFS → 前后 120ms 静音 → libsndfile 写 OGG Vorbis。
    运行时 Android 侧只有 MediaPlayer 播 res/raw/*.ogg，不引入任何 TTS 引擎。
 2. 插画：把生图模型返回的 RGB 图（浅灰棋盘格底 + 右下角水印）转成
    1024x1024 RGBA 透明底，算法沿用 V1 generated-images/make_alpha.py。
+   本轮新增 18 张图已由 Image Gen 直接输出透明背景，保留原图，不调用此转换。
 
 零第三方依赖：PNG 解码/编码、WAV 读写均为标准库，OGG 用 ctypes 调 libsndfile。
 
 用法：
-  python tools/prepare_v2_assets.py audio          # 全量 24 条 → tools/v2_build/audio/
+  python tools/prepare_v2_assets.py audio          # 全量词库 → tools/v2_build/audio/
   python tools/prepare_v2_assets.py audio --commit # 同上并写入 res/raw/
-  python tools/prepare_v2_assets.py image SRC DST  # 单张插画透明化
+  python tools/prepare_v2_assets.py audio --missing-only --commit # 只补缺失词音
+  python tools/prepare_v2_assets.py image SRC DST  # 仅供旧 RGB 素材流程；新 RGBA 不使用
   python tools/prepare_v2_assets.py verify         # 校验暂存产物
 
 环境变量：
@@ -163,9 +165,11 @@ def normalize_clip(samples: list[float]) -> list[float]:
 
 
 # ------------------------------------------------------------------ 发音全量
-def build_audio(commit: bool = False) -> None:
+def build_audio(commit: bool = False, missing_only: bool = False) -> None:
     data = json.loads(PACKS.read_text(encoding="utf-8"))
     words = data["words"]
+    if missing_only:
+        words = [w for w in words if not (RAW / w["audio"]).exists()]
     piper, model = find_piper(), find_model()
     stage = Path(tempfile.mkdtemp(prefix="gugu_v2wav_"))
     AUDIO_OUT.mkdir(parents=True, exist_ok=True)
@@ -192,9 +196,9 @@ def build_audio(commit: bool = False) -> None:
         RAW.mkdir(parents=True, exist_ok=True)
         for w in words:
             shutil.copy2(AUDIO_OUT / w["audio"], RAW / w["audio"])
-        print(f"已写入 {RAW}（V1 的 word_cat/dog/bear.ogg 占位音被重制覆盖）")
+        print(f"已写入 {RAW}")
     elif commit:
-        print("存在失败条目，未写入 res/raw/")
+        raise RuntimeError("存在失败条目，未写入 res/raw/")
 
 
 # ------------------------------------------------------------------ PNG 透明化
@@ -342,7 +346,7 @@ def verify() -> None:
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "verify"
     if cmd == "audio":
-        build_audio(commit="--commit" in sys.argv)
+        build_audio(commit="--commit" in sys.argv, missing_only="--missing-only" in sys.argv)
     elif cmd == "image":
         process_image(Path(sys.argv[2]), Path(sys.argv[3]))
     elif cmd == "verify":

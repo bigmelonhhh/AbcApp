@@ -49,6 +49,7 @@ class QuizPickerTest {
                     val q = QuizPicker.pick(pack, index, allLearned, seed)
                     val target = q.target
                     val other = distractorOf(q)
+                    assertEquals("干扰项不能跨分类", pack.category, Words.of(other.packId).category)
 
                     assertEquals(pack.words[index].id, target.id)
                     assertNotEquals("${pack.id}/$index/seed=$seed 干扰项等于目标词", target.id, other.id)

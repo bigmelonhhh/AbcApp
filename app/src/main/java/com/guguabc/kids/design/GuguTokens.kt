@@ -16,6 +16,9 @@ import com.guguabc.kids.R
  */
 
 object GuguColor {
+    val fruitCard = Color(0xFFE8F3D9)
+    val vehicleCard = Color(0xFFE1F1FA)
+    val everydayCard = Color(0xFFFBE5D8)
     val background = Color(0xFFFFFAF0)          // 3:240 / 3:241 / 3:242 / 3:244
     val backgroundCheer = Color(0xFFFFF6DE)     // 3:243
     val surface = Color(0xFFFFFFFF)             // 3:240
@@ -50,6 +53,12 @@ object GuguType {
     )
 
     // ① 首页 3:240
+    val categoryHeading = cn(40, FontWeight.W700, GuguColor.onSurface)
+    val categoryName = cn(36, FontWeight.W700, GuguColor.onSurface)
+    val categoryEnglish = TextStyle(fontFamily = FredokaBold, fontWeight = FontWeight.W700, fontSize = 24.sp, color = GuguColor.textSecondary)
+    val categoryBrand = cn(26, FontWeight.W700, GuguColor.onSurface)
+    val categoryLesson = cn(28, FontWeight.W700, GuguColor.onSurface)
+    val categoryAction = cn(24, FontWeight.W500, GuguColor.onSurface)
     val homeGreeting = cn(22, FontWeight.W500, GuguColor.textTertiary)
     val homeBrand = cn(48, FontWeight.W700, GuguColor.onSurface)
     val homeBubble = cn(30, FontWeight.W700, GuguColor.onSurface)
@@ -61,6 +70,7 @@ object GuguType {
 
     // ② 认一认 3:241
     val wordEn = TextStyle(fontFamily = FredokaBold, fontWeight = FontWeight.W700, fontSize = 96.sp, color = GuguColor.onSurface)
+    val wordEnLong = wordEn.copy(fontSize = 76.sp)
     val wordZh = cn(30, FontWeight.W500, GuguColor.textTertiary)
     val soundHint = cn(24, FontWeight.W400, GuguColor.textTertiary)
     val nextButton = cn(36, FontWeight.W700, GuguColor.onSurface)
@@ -106,6 +116,38 @@ object GuguType {
 }
 
 object GuguDimens {
+    // V2 分类首页 / 自主选课：1280 × 800 横屏。
+    val menuPadding = 48.dp
+    val menuHeaderHeight = 64.dp
+    val menuHeaderGap = 16.dp
+    val menuMascot = 64.dp
+    val menuBackWidth = 140.dp
+    val menuParentWidth = 132.dp
+    val menuParentIcon = 28.dp
+    val menuTitleGap = 16.dp
+    val menuGridGap = 24.dp
+    val menuGridTop = 24.dp
+    val menuCardHeight = 204.dp
+    val menuFewCardHeight = 340.dp
+    val menuFewLessonArt = 216.dp
+    val menuCardRadius = 36.dp
+    val menuCardPadding = 24.dp
+    val menuHeroWidth = 246.dp
+    val menuHeroArt = 152.dp
+    val menuHeroOffset = 90.dp
+    val menuHeroRise = 20.dp
+    val menuTextGap = 10.dp
+    val menuLessonArt = 136.dp
+    val menuLessonArtGap = 18.dp
+    val menuFooterHeight = 64.dp
+    val menuAlbumWidth = 250.dp
+    val menuDot = 12.dp
+    val menuDotGap = 12.dp
+    val menuChipWidth = 180.dp
+    val menuChipHeight = 52.dp
+    val menuChipIcon = 40.dp
+    val menuStickerCell = 112.dp
+    val menuStickerArt = 92.dp
     // 设计画布 §3.1
     val screenWidth = 1280.dp                  // 3:225
     val screenHeight = 800.dp                 // 3:225
@@ -267,11 +309,9 @@ object GuguDimens {
     val packRowStroke = 1.dp
     val packAvatar = 32.dp
 
-    // 2026-11-09 交互修复：按钮禁用态 / 家长门长按反馈（design_v2.md 附录⑦⑧）
+    // 2026-11-09 交互修复：按钮禁用态（design_v2.md 附录⑦⑧）
     val disabledAlpha = 0.32f
     val disabledTextAlpha = 0.6f
-    val parentGateRingWidth = 6.dp
-    const val parentGateHoldMs = 1500L
 }
 
 /** design.md §4.3：颜色、透明度、dy 必须精确；blur 为 Figma radius。 */

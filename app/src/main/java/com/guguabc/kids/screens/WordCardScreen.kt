@@ -76,7 +76,7 @@ fun WordCardScreen(
                         background = GuguColor.cream,
                         onClick = onSound,
                     )
-                    GuguText(word.en, GuguType.wordEn, Modifier.testTag("word_en"))
+                    GuguText(word.en, if (word.en.length >= 9) GuguType.wordEnLong else GuguType.wordEn, Modifier.testTag("word_en"))
                     GuguText(word.zh, GuguType.wordZh, Modifier.testTag("word_zh"))
                 }
             }

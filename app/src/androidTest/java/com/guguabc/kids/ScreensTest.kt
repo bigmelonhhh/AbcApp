@@ -21,34 +21,23 @@ class ScreensTest {
 
     // ---- ① 首页 ----
     @Test
-    fun homeBaselineKeepsV1CopyAndStartsLesson() {
-        var started = 0
-        rule.setGuguScreen {
-            HomeScreen(
-                pack = Words.of(Words.DEFAULT_PACK_ID),
-                onStart = { started++ },
-                onParentGate = {},
-            )
+    fun homeShowsFourCategoriesAndForwardsSelection() {
+        val selected = mutableListOf<com.guguabc.kids.data.LearningCategory>()
+        rule.setGuguScreen { HomeScreen(onCategory = { selected.add(it) }, onStickerBook = {}, onParentGate = {}) }
+        rule.onNodeWithText(Strings.EXPLORE_TITLE).assertExists()
+        com.guguabc.kids.data.LearningCategory.entries.forEach {
+            rule.onNodeWithText(it.title).assertExists()
+            rule.tap("category_${it.id}")
         }
-        rule.onNodeWithTag("screen_home").assertExists()
-        rule.onNodeWithText(Strings.HOME_GREETING).assertExists()
-        rule.onNodeWithText(Strings.BRAND).assertExists()
-        rule.onNodeWithText(Strings.LESSON_TITLE).assertExists()
-        rule.onNodeWithText(Strings.LESSON_META).assertExists()
-        rule.onNodeWithText(Strings.HOME_FOOTER).assertExists()
-        rule.onNodeWithTag("btn_parent").assertExists()
-        rule.tap("btn_start")
-        assertEquals(1, started)
+        assertEquals(com.guguabc.kids.data.LearningCategory.entries.toList(), selected)
     }
 
     @Test
-    fun homeNonBaselinePackShowsItsOwnTitleAndShortMeta() {
-        val pack = Words.of(Words.P6)
-        rule.setGuguScreen { HomeScreen(pack = pack, onStart = {}, onParentGate = {}) }
-        rule.onNodeWithText(pack.title).assertExists()
-        rule.onNodeWithText(Strings.LESSON_META_SHORT).assertExists()
-        rule.onNodeWithText(Strings.LESSON_TITLE).assertDoesNotExist()
-        rule.onNodeWithText(Strings.LESSON_META).assertDoesNotExist()
+    fun homeStickerBookEntryIsDirectlyAvailable() {
+        var opened = 0
+        rule.setGuguScreen { HomeScreen(onCategory = {}, onStickerBook = { opened++ }, onParentGate = {}) }
+        rule.tap("btn_sticker_book")
+        assertEquals(1, opened)
     }
 
     // ---- ② 认一认 ----
@@ -237,6 +226,8 @@ class ScreensTest {
             )
         }
         rule.tap("btn_replay")
+        rule.mainClock.advanceTimeByFrame()
+        rule.waitForIdle()
         rule.onNodeWithText(Strings.TIME_UP_HINT).assertExists()
         rule.onNodeWithText(Strings.PARENT_CARD_HINT).assertDoesNotExist()
         rule.mainClock.advanceTimeBy(2_100)

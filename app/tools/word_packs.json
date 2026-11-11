@@ -1,71 +1,926 @@
 {
   "version": "2.0",
-  "note": "咕咕 ABC V2 24 词动物词库，design_v2.md §2 的机器可读真值源。prepare_assets.py / 词表生成 / 验收脚本共同消费。",
+  "note": "V2 分类学习：4 类、42 词、14 课；本文件为词表、分类及媒体资源的机器可读真值源。",
   "audio": {
     "engine": "piper-tts",
     "voice": "en_US-lessac-medium",
-    "license": "MIT (voice model) / GPL-3.0 (engine, generation side only, not shipped in APK)",
+    "license": "See src/main/assets/TTS_NOTICE.txt for engine license and voice model/data source links.",
     "lengthScale": 1.3,
     "sampleRate": 22050,
     "channels": 1,
     "format": "ogg-vorbis",
     "leadSilenceMs": 120,
     "tailSilenceMs": 120,
-    "peakDbfs": -3.0
+    "peakDbfs": -3.0,
+    "engineRelease": "rhasspy/piper 2023.11.14-2 (new 18 words)"
   },
   "illustration": {
-    "size": [1024, 1024],
     "mode": "RGBA",
     "styleAnchor": "img_cat.png",
     "contentScale": "Fit",
-    "directory": "gugu-abc-android-assets/illustrations"
+    "directory": "src/main/res/drawable-nodpi",
+    "legacySize": [
+      1024,
+      1024
+    ],
+    "newAssets": "Image Gen; square RGBA cutouts, natural resolution preserved; dimensions per word."
   },
   "distractors": {
-    "rule": "different group, from learned words only, prefer maximal silhouette difference, no repeat within two consecutive quizzes",
+    "rule": "Same category; current lesson plus learned words; exclude same shape group and forbidden pairs; deterministic rotation; animal baseline retains fixed in-lesson rotation.",
     "forbiddenPairs": [
-      ["lion", "tiger"],
-      ["cat", "lion"],
-      ["dog", "fox"],
-      ["duck", "bird"],
-      ["horse", "zebra"],
-      ["turtle", "frog"]
+      [
+        "lion",
+        "tiger"
+      ],
+      [
+        "cat",
+        "lion"
+      ],
+      [
+        "dog",
+        "fox"
+      ],
+      [
+        "duck",
+        "bird"
+      ],
+      [
+        "horse",
+        "zebra"
+      ],
+      [
+        "turtle",
+        "frog"
+      ]
     ],
     "baselineNote": "pack p1_friends keeps V1 in-pack rotation so pixel baselines stay reproducible"
   },
   "packs": [
-    { "id": "p1_friends", "no": 1, "title": "身边的小伙伴", "level": "L1", "words": ["cat", "dog", "bear"] },
-    { "id": "p2_farm",    "no": 2, "title": "农场里",       "level": "L1", "words": ["pig", "cow", "duck"] },
-    { "id": "p3_meadow",  "no": 3, "title": "草地上",       "level": "L1", "words": ["rabbit", "sheep", "horse"] },
-    { "id": "p4_pond",    "no": 4, "title": "池塘边",       "level": "L1", "words": ["fish", "frog", "bird"] },
-    { "id": "p5_forest",  "no": 5, "title": "树林里",       "level": "L1", "words": ["fox", "monkey", "deer"] },
-    { "id": "p6_zoo",     "no": 6, "title": "动物园",       "level": "L1", "words": ["lion", "tiger", "panda"] },
-    { "id": "p7_big",     "no": 7, "title": "大个子朋友",   "level": "L2", "words": ["elephant", "giraffe", "zebra"] },
-    { "id": "p8_special", "no": 8, "title": "特别的朋友",   "level": "L2", "words": ["owl", "turtle", "butterfly"] }
+    {
+      "id": "p1_friends",
+      "no": 1,
+      "title": "身边的小伙伴",
+      "level": "L1",
+      "words": [
+        "cat",
+        "dog",
+        "bear"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p2_farm",
+      "no": 2,
+      "title": "农场里",
+      "level": "L1",
+      "words": [
+        "pig",
+        "cow",
+        "duck"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p3_meadow",
+      "no": 3,
+      "title": "草地上",
+      "level": "L1",
+      "words": [
+        "rabbit",
+        "sheep",
+        "horse"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p4_pond",
+      "no": 4,
+      "title": "池塘边",
+      "level": "L1",
+      "words": [
+        "fish",
+        "frog",
+        "bird"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p5_forest",
+      "no": 5,
+      "title": "树林里",
+      "level": "L1",
+      "words": [
+        "fox",
+        "monkey",
+        "deer"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p6_zoo",
+      "no": 6,
+      "title": "动物园",
+      "level": "L1",
+      "words": [
+        "lion",
+        "tiger",
+        "panda"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p7_big",
+      "no": 7,
+      "title": "大个子朋友",
+      "level": "L2",
+      "words": [
+        "elephant",
+        "giraffe",
+        "zebra"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "p8_special",
+      "no": 8,
+      "title": "特别的朋友",
+      "level": "L2",
+      "words": [
+        "owl",
+        "turtle",
+        "butterfly"
+      ],
+      "category": "animals"
+    },
+    {
+      "id": "f1_favorites",
+      "no": 9,
+      "title": "甜甜的水果",
+      "level": "L1",
+      "category": "fruit",
+      "words": [
+        "apple",
+        "banana",
+        "orange"
+      ]
+    },
+    {
+      "id": "f2_colorful",
+      "no": 10,
+      "title": "彩色果篮",
+      "level": "L1",
+      "category": "fruit",
+      "words": [
+        "grape",
+        "strawberry",
+        "watermelon"
+      ]
+    },
+    {
+      "id": "v1_street",
+      "no": 11,
+      "title": "马路上",
+      "level": "L1",
+      "category": "vehicles",
+      "words": [
+        "car",
+        "bus",
+        "bicycle"
+      ]
+    },
+    {
+      "id": "v2_travel",
+      "no": 12,
+      "title": "一起去旅行",
+      "level": "L1",
+      "category": "vehicles",
+      "words": [
+        "train",
+        "airplane",
+        "boat"
+      ]
+    },
+    {
+      "id": "d1_table",
+      "no": 13,
+      "title": "吃饭啦",
+      "level": "L1",
+      "category": "everyday",
+      "words": [
+        "cup",
+        "spoon",
+        "bowl"
+      ]
+    },
+    {
+      "id": "d2_routine",
+      "no": 14,
+      "title": "我的小日常",
+      "level": "L1",
+      "category": "everyday",
+      "words": [
+        "toothbrush",
+        "towel",
+        "shoe"
+      ]
+    }
   ],
   "words": [
-    { "id": "cat",       "en": "Cat",       "zh": "小猫",   "pack": "p1_friends", "level": "L1", "group": "feline",   "anchor": "竖耳+胡须+长尾",   "image": "img_cat.png",       "audio": "word_cat.ogg",       "ttsText": "cat",       "existing": true },
-    { "id": "dog",       "en": "Dog",       "zh": "小狗",   "pack": "p1_friends", "level": "L1", "group": "canine",   "anchor": "垂耳+吐舌",         "image": "img_dog.png",       "audio": "word_dog.ogg",       "ttsText": "dog",       "existing": true },
-    { "id": "bear",      "en": "Bear",      "zh": "小熊",   "pack": "p1_friends", "level": "L1", "group": "chunky",   "anchor": "圆耳+厚实身形",     "image": "img_bear.png",      "audio": "word_bear.ogg",      "ttsText": "bear",      "existing": true },
-    { "id": "pig",       "en": "Pig",       "zh": "小猪",   "pack": "p2_farm",    "level": "L1", "group": "chunky",   "anchor": "猪鼻+卷尾",         "image": "img_pig.png",       "audio": "word_pig.ogg",       "ttsText": "pig",       "existing": false },
-    { "id": "cow",       "en": "Cow",       "zh": "奶牛",   "pack": "p2_farm",    "level": "L1", "group": "chunky",   "anchor": "黑白斑+小角",       "image": "img_cow.png",       "audio": "word_cow.ogg",       "ttsText": "cow",       "existing": false },
-    { "id": "duck",      "en": "Duck",      "zh": "小鸭",   "pack": "p2_farm",    "level": "L1", "group": "bird",     "anchor": "扁黄嘴+蹼",         "image": "img_duck.png",      "audio": "word_duck.ogg",      "ttsText": "duck",      "existing": false },
-    { "id": "rabbit",    "en": "Rabbit",    "zh": "兔子",   "pack": "p3_meadow",  "level": "L1", "group": "tiny",     "anchor": "长耳+短尾",         "image": "img_rabbit.png",    "audio": "word_rabbit.ogg",    "ttsText": "rabbit",    "existing": false },
-    { "id": "sheep",     "en": "Sheep",     "zh": "绵羊",   "pack": "p3_meadow",  "level": "L1", "group": "chunky",   "anchor": "蓬松卷毛",          "image": "img_sheep.png",     "audio": "word_sheep.ogg",     "ttsText": "sheep",     "existing": false },
-    { "id": "horse",     "en": "Horse",     "zh": "马",     "pack": "p3_meadow",  "level": "L1", "group": "slender",  "anchor": "长脸+鬃毛",         "image": "img_horse.png",     "audio": "word_horse.ogg",     "ttsText": "horse",     "existing": false },
-    { "id": "fish",      "en": "Fish",      "zh": "小鱼",   "pack": "p4_pond",    "level": "L1", "group": "aquatic",  "anchor": "尾鳍+流线",         "image": "img_fish.png",      "audio": "word_fish.ogg",      "ttsText": "fish",      "existing": false },
-    { "id": "frog",      "en": "Frog",      "zh": "青蛙",   "pack": "p4_pond",    "level": "L1", "group": "aquatic",  "anchor": "大眼+蹲姿",         "image": "img_frog.png",      "audio": "word_frog.ogg",      "ttsText": "frog",      "existing": false },
-    { "id": "bird",      "en": "Bird",      "zh": "小鸟",   "pack": "p4_pond",    "level": "L1", "group": "bird",     "anchor": "尖喙+展翅",         "image": "img_bird.png",      "audio": "word_bird.ogg",      "ttsText": "bird",      "existing": false },
-    { "id": "fox",       "en": "Fox",       "zh": "狐狸",   "pack": "p5_forest",  "level": "L1", "group": "canine",   "anchor": "尖脸+大尾",         "image": "img_fox.png",       "audio": "word_fox.ogg",       "ttsText": "fox",       "existing": false },
-    { "id": "monkey",    "en": "Monkey",    "zh": "猴子",   "pack": "p5_forest",  "level": "L1", "group": "primate",  "anchor": "长尾+圆耳",         "image": "img_monkey.png",    "audio": "word_monkey.ogg",    "ttsText": "monkey",    "existing": false },
-    { "id": "deer",      "en": "Deer",      "zh": "鹿",     "pack": "p5_forest",  "level": "L1", "group": "slender",  "anchor": "鹿角",              "image": "img_deer.png",      "audio": "word_deer.ogg",      "ttsText": "deer",      "existing": false },
-    { "id": "lion",      "en": "Lion",      "zh": "狮子",   "pack": "p6_zoo",     "level": "L1", "group": "feline",   "anchor": "鬃毛",              "image": "img_lion.png",      "audio": "word_lion.ogg",      "ttsText": "lion",      "existing": false },
-    { "id": "tiger",     "en": "Tiger",     "zh": "老虎",   "pack": "p6_zoo",     "level": "L1", "group": "feline",   "anchor": "橙底黑条纹",        "image": "img_tiger.png",     "audio": "word_tiger.ogg",     "ttsText": "tiger",     "existing": false },
-    { "id": "panda",     "en": "Panda",     "zh": "熊猫",   "pack": "p6_zoo",     "level": "L1", "group": "chunky",   "anchor": "黑白眼圈",          "image": "img_panda.png",     "audio": "word_panda.ogg",     "ttsText": "panda",     "existing": false },
-    { "id": "elephant",  "en": "Elephant",  "zh": "大象",   "pack": "p7_big",     "level": "L2", "group": "giant",    "anchor": "长鼻+大耳",         "image": "img_elephant.png",  "audio": "word_elephant.ogg",  "ttsText": "elephant",  "existing": false },
-    { "id": "giraffe",   "en": "Giraffe",   "zh": "长颈鹿", "pack": "p7_big",     "level": "L2", "group": "slender",  "anchor": "长脖+斑块",         "image": "img_giraffe.png",   "audio": "word_giraffe.ogg",   "ttsText": "giraffe",   "existing": false },
-    { "id": "zebra",     "en": "Zebra",     "zh": "斑马",   "pack": "p7_big",     "level": "L2", "group": "slender",  "anchor": "黑白条纹",          "image": "img_zebra.png",     "audio": "word_zebra.ogg",     "ttsText": "zebra",     "existing": false },
-    { "id": "owl",       "en": "Owl",       "zh": "猫头鹰", "pack": "p8_special", "level": "L2", "group": "bird",     "anchor": "大眼+面盘",         "image": "img_owl.png",       "audio": "word_owl.ogg",       "ttsText": "owl",       "existing": false },
-    { "id": "turtle",    "en": "Turtle",    "zh": "乌龟",   "pack": "p8_special", "level": "L2", "group": "aquatic",  "anchor": "圆壳",              "image": "img_turtle.png",    "audio": "word_turtle.ogg",    "ttsText": "turtle",    "existing": false },
-    { "id": "butterfly", "en": "Butterfly", "zh": "蝴蝶",   "pack": "p8_special", "level": "L2", "group": "tiny",     "anchor": "对称大翅",          "image": "img_butterfly.png", "audio": "word_butterfly.ogg", "ttsText": "butterfly", "existing": false }
+    {
+      "id": "cat",
+      "en": "Cat",
+      "zh": "小猫",
+      "pack": "p1_friends",
+      "level": "L1",
+      "group": "feline",
+      "anchor": "竖耳+胡须+长尾",
+      "image": "img_cat.png",
+      "audio": "word_cat.ogg",
+      "ttsText": "cat",
+      "existing": true
+    },
+    {
+      "id": "dog",
+      "en": "Dog",
+      "zh": "小狗",
+      "pack": "p1_friends",
+      "level": "L1",
+      "group": "canine",
+      "anchor": "垂耳+吐舌",
+      "image": "img_dog.png",
+      "audio": "word_dog.ogg",
+      "ttsText": "dog",
+      "existing": true
+    },
+    {
+      "id": "bear",
+      "en": "Bear",
+      "zh": "小熊",
+      "pack": "p1_friends",
+      "level": "L1",
+      "group": "chunky",
+      "anchor": "圆耳+厚实身形",
+      "image": "img_bear.png",
+      "audio": "word_bear.ogg",
+      "ttsText": "bear",
+      "existing": true
+    },
+    {
+      "id": "pig",
+      "en": "Pig",
+      "zh": "小猪",
+      "pack": "p2_farm",
+      "level": "L1",
+      "group": "chunky",
+      "anchor": "猪鼻+卷尾",
+      "image": "img_pig.png",
+      "audio": "word_pig.ogg",
+      "ttsText": "pig",
+      "existing": false
+    },
+    {
+      "id": "cow",
+      "en": "Cow",
+      "zh": "奶牛",
+      "pack": "p2_farm",
+      "level": "L1",
+      "group": "chunky",
+      "anchor": "黑白斑+小角",
+      "image": "img_cow.png",
+      "audio": "word_cow.ogg",
+      "ttsText": "cow",
+      "existing": false
+    },
+    {
+      "id": "duck",
+      "en": "Duck",
+      "zh": "小鸭",
+      "pack": "p2_farm",
+      "level": "L1",
+      "group": "bird",
+      "anchor": "扁黄嘴+蹼",
+      "image": "img_duck.png",
+      "audio": "word_duck.ogg",
+      "ttsText": "duck",
+      "existing": false
+    },
+    {
+      "id": "rabbit",
+      "en": "Rabbit",
+      "zh": "兔子",
+      "pack": "p3_meadow",
+      "level": "L1",
+      "group": "tiny",
+      "anchor": "长耳+短尾",
+      "image": "img_rabbit.png",
+      "audio": "word_rabbit.ogg",
+      "ttsText": "rabbit",
+      "existing": false
+    },
+    {
+      "id": "sheep",
+      "en": "Sheep",
+      "zh": "绵羊",
+      "pack": "p3_meadow",
+      "level": "L1",
+      "group": "chunky",
+      "anchor": "蓬松卷毛",
+      "image": "img_sheep.png",
+      "audio": "word_sheep.ogg",
+      "ttsText": "sheep",
+      "existing": false
+    },
+    {
+      "id": "horse",
+      "en": "Horse",
+      "zh": "马",
+      "pack": "p3_meadow",
+      "level": "L1",
+      "group": "slender",
+      "anchor": "长脸+鬃毛",
+      "image": "img_horse.png",
+      "audio": "word_horse.ogg",
+      "ttsText": "horse",
+      "existing": false
+    },
+    {
+      "id": "fish",
+      "en": "Fish",
+      "zh": "小鱼",
+      "pack": "p4_pond",
+      "level": "L1",
+      "group": "aquatic",
+      "anchor": "尾鳍+流线",
+      "image": "img_fish.png",
+      "audio": "word_fish.ogg",
+      "ttsText": "fish",
+      "existing": false
+    },
+    {
+      "id": "frog",
+      "en": "Frog",
+      "zh": "青蛙",
+      "pack": "p4_pond",
+      "level": "L1",
+      "group": "aquatic",
+      "anchor": "大眼+蹲姿",
+      "image": "img_frog.png",
+      "audio": "word_frog.ogg",
+      "ttsText": "frog",
+      "existing": false
+    },
+    {
+      "id": "bird",
+      "en": "Bird",
+      "zh": "小鸟",
+      "pack": "p4_pond",
+      "level": "L1",
+      "group": "bird",
+      "anchor": "尖喙+展翅",
+      "image": "img_bird.png",
+      "audio": "word_bird.ogg",
+      "ttsText": "bird",
+      "existing": false
+    },
+    {
+      "id": "fox",
+      "en": "Fox",
+      "zh": "狐狸",
+      "pack": "p5_forest",
+      "level": "L1",
+      "group": "canine",
+      "anchor": "尖脸+大尾",
+      "image": "img_fox.png",
+      "audio": "word_fox.ogg",
+      "ttsText": "fox",
+      "existing": false
+    },
+    {
+      "id": "monkey",
+      "en": "Monkey",
+      "zh": "猴子",
+      "pack": "p5_forest",
+      "level": "L1",
+      "group": "primate",
+      "anchor": "长尾+圆耳",
+      "image": "img_monkey.png",
+      "audio": "word_monkey.ogg",
+      "ttsText": "monkey",
+      "existing": false
+    },
+    {
+      "id": "deer",
+      "en": "Deer",
+      "zh": "鹿",
+      "pack": "p5_forest",
+      "level": "L1",
+      "group": "slender",
+      "anchor": "鹿角",
+      "image": "img_deer.png",
+      "audio": "word_deer.ogg",
+      "ttsText": "deer",
+      "existing": false
+    },
+    {
+      "id": "lion",
+      "en": "Lion",
+      "zh": "狮子",
+      "pack": "p6_zoo",
+      "level": "L1",
+      "group": "feline",
+      "anchor": "鬃毛",
+      "image": "img_lion.png",
+      "audio": "word_lion.ogg",
+      "ttsText": "lion",
+      "existing": false
+    },
+    {
+      "id": "tiger",
+      "en": "Tiger",
+      "zh": "老虎",
+      "pack": "p6_zoo",
+      "level": "L1",
+      "group": "feline",
+      "anchor": "橙底黑条纹",
+      "image": "img_tiger.png",
+      "audio": "word_tiger.ogg",
+      "ttsText": "tiger",
+      "existing": false
+    },
+    {
+      "id": "panda",
+      "en": "Panda",
+      "zh": "熊猫",
+      "pack": "p6_zoo",
+      "level": "L1",
+      "group": "chunky",
+      "anchor": "黑白眼圈",
+      "image": "img_panda.png",
+      "audio": "word_panda.ogg",
+      "ttsText": "panda",
+      "existing": false
+    },
+    {
+      "id": "elephant",
+      "en": "Elephant",
+      "zh": "大象",
+      "pack": "p7_big",
+      "level": "L2",
+      "group": "giant",
+      "anchor": "长鼻+大耳",
+      "image": "img_elephant.png",
+      "audio": "word_elephant.ogg",
+      "ttsText": "elephant",
+      "existing": false
+    },
+    {
+      "id": "giraffe",
+      "en": "Giraffe",
+      "zh": "长颈鹿",
+      "pack": "p7_big",
+      "level": "L2",
+      "group": "slender",
+      "anchor": "长脖+斑块",
+      "image": "img_giraffe.png",
+      "audio": "word_giraffe.ogg",
+      "ttsText": "giraffe",
+      "existing": false
+    },
+    {
+      "id": "zebra",
+      "en": "Zebra",
+      "zh": "斑马",
+      "pack": "p7_big",
+      "level": "L2",
+      "group": "slender",
+      "anchor": "黑白条纹",
+      "image": "img_zebra.png",
+      "audio": "word_zebra.ogg",
+      "ttsText": "zebra",
+      "existing": false
+    },
+    {
+      "id": "owl",
+      "en": "Owl",
+      "zh": "猫头鹰",
+      "pack": "p8_special",
+      "level": "L2",
+      "group": "bird",
+      "anchor": "大眼+面盘",
+      "image": "img_owl.png",
+      "audio": "word_owl.ogg",
+      "ttsText": "owl",
+      "existing": false
+    },
+    {
+      "id": "turtle",
+      "en": "Turtle",
+      "zh": "乌龟",
+      "pack": "p8_special",
+      "level": "L2",
+      "group": "aquatic",
+      "anchor": "圆壳",
+      "image": "img_turtle.png",
+      "audio": "word_turtle.ogg",
+      "ttsText": "turtle",
+      "existing": false
+    },
+    {
+      "id": "butterfly",
+      "en": "Butterfly",
+      "zh": "蝴蝶",
+      "pack": "p8_special",
+      "level": "L2",
+      "group": "tiny",
+      "anchor": "对称大翅",
+      "image": "img_butterfly.png",
+      "audio": "word_butterfly.ogg",
+      "ttsText": "butterfly",
+      "existing": false
+    },
+    {
+      "id": "apple",
+      "en": "Apple",
+      "zh": "苹果",
+      "pack": "f1_favorites",
+      "level": "L1",
+      "group": "round_fruit",
+      "anchor": "圆果+果柄+绿叶",
+      "image": "img_apple.png",
+      "audio": "word_apple.ogg",
+      "ttsText": "apple",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-e534438c-7159-42f0-ab7b-a966b9926756.png"
+    },
+    {
+      "id": "banana",
+      "en": "Banana",
+      "zh": "香蕉",
+      "pack": "f1_favorites",
+      "level": "L1",
+      "group": "long_fruit",
+      "anchor": "弯长果身+黄色果皮",
+      "image": "img_banana.png",
+      "audio": "word_banana.ogg",
+      "ttsText": "banana",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-1ba86031-84f1-4d02-9222-f76a86e7f4fa.png"
+    },
+    {
+      "id": "orange",
+      "en": "Orange",
+      "zh": "橙子",
+      "pack": "f1_favorites",
+      "level": "L1",
+      "group": "round_fruit",
+      "anchor": "橙色圆果+细纹果皮",
+      "image": "img_orange.png",
+      "audio": "word_orange.ogg",
+      "ttsText": "orange",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-d556e5ed-c80c-4ac1-9f21-6fe191eef5f6.png"
+    },
+    {
+      "id": "grape",
+      "en": "Grape",
+      "zh": "葡萄",
+      "pack": "f2_colorful",
+      "level": "L1",
+      "group": "cluster_fruit",
+      "anchor": "成串圆粒+枝梗",
+      "image": "img_grape.png",
+      "audio": "word_grape.ogg",
+      "ttsText": "grape",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-a7d6dd68-1f40-4d77-b302-c090112c392d.png"
+    },
+    {
+      "id": "strawberry",
+      "en": "Strawberry",
+      "zh": "草莓",
+      "pack": "f2_colorful",
+      "level": "L1",
+      "group": "berry",
+      "anchor": "红色心形果实+绿萼+籽点",
+      "image": "img_strawberry.png",
+      "audio": "word_strawberry.ogg",
+      "ttsText": "strawberry",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-74411a15-2cc8-437a-9706-c0cd01b7e692.png"
+    },
+    {
+      "id": "watermelon",
+      "en": "Watermelon",
+      "zh": "西瓜",
+      "pack": "f2_colorful",
+      "level": "L1",
+      "group": "melon",
+      "anchor": "绿色条纹果皮+红瓤黑籽",
+      "image": "img_watermelon.png",
+      "audio": "word_watermelon.ogg",
+      "ttsText": "watermelon",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-b1b89f1e-1e95-4c75-b37d-cbef3e305da7.png"
+    },
+    {
+      "id": "car",
+      "en": "Car",
+      "zh": "汽车",
+      "pack": "v1_street",
+      "level": "L1",
+      "group": "small_vehicle",
+      "anchor": "车身+四轮+车窗",
+      "image": "img_car.png",
+      "audio": "word_car.ogg",
+      "ttsText": "car",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-8a71ff06-594b-48e8-b227-d67f285848b9.png"
+    },
+    {
+      "id": "bus",
+      "en": "Bus",
+      "zh": "公交车",
+      "pack": "v1_street",
+      "level": "L1",
+      "group": "long_vehicle",
+      "anchor": "长车身+多扇车窗",
+      "image": "img_bus.png",
+      "audio": "word_bus.ogg",
+      "ttsText": "bus",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-6d35440e-a79d-454c-9e26-db163bf42e8d.png"
+    },
+    {
+      "id": "bicycle",
+      "en": "Bicycle",
+      "zh": "自行车",
+      "pack": "v1_street",
+      "level": "L1",
+      "group": "cycle",
+      "anchor": "两轮+车把+脚踏",
+      "image": "img_bicycle.png",
+      "audio": "word_bicycle.ogg",
+      "ttsText": "bicycle",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-fa153544-a472-4a83-be36-50e07f61d8f0.png"
+    },
+    {
+      "id": "train",
+      "en": "Train",
+      "zh": "火车",
+      "pack": "v2_travel",
+      "level": "L1",
+      "group": "rail",
+      "anchor": "车头+车厢+铁轨轮组",
+      "image": "img_train.png",
+      "audio": "word_train.ogg",
+      "ttsText": "train",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-0c8718cb-7229-42e8-a8f3-bda2bb1d7e64.png"
+    },
+    {
+      "id": "airplane",
+      "en": "Airplane",
+      "zh": "飞机",
+      "pack": "v2_travel",
+      "level": "L1",
+      "group": "aircraft",
+      "anchor": "机翼+机身+尾翼",
+      "image": "img_airplane.png",
+      "audio": "word_airplane.ogg",
+      "ttsText": "airplane",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-046bdc66-9d8f-4110-b0ed-15ce3c11275e.png"
+    },
+    {
+      "id": "boat",
+      "en": "Boat",
+      "zh": "小船",
+      "pack": "v2_travel",
+      "level": "L1",
+      "group": "watercraft",
+      "anchor": "船身+船舱",
+      "image": "img_boat.png",
+      "audio": "word_boat.ogg",
+      "ttsText": "boat",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-a52cdc16-33ec-4c1e-b910-9c0514555ab7.png"
+    },
+    {
+      "id": "cup",
+      "en": "Cup",
+      "zh": "杯子",
+      "pack": "d1_table",
+      "level": "L1",
+      "group": "drinkware",
+      "anchor": "杯口+杯把",
+      "image": "img_cup.png",
+      "audio": "word_cup.ogg",
+      "ttsText": "cup",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-3528d59b-79d6-412c-86dc-fc9515e31ac5.png"
+    },
+    {
+      "id": "spoon",
+      "en": "Spoon",
+      "zh": "勺子",
+      "pack": "d1_table",
+      "level": "L1",
+      "group": "cutlery",
+      "anchor": "长柄+椭圆勺头",
+      "image": "img_spoon.png",
+      "audio": "word_spoon.ogg",
+      "ttsText": "spoon",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-076817f6-ed97-4e6e-9fbf-7a53a6be25bd.png"
+    },
+    {
+      "id": "bowl",
+      "en": "Bowl",
+      "zh": "碗",
+      "pack": "d1_table",
+      "level": "L1",
+      "group": "tableware",
+      "anchor": "敞口圆碗",
+      "image": "img_bowl.png",
+      "audio": "word_bowl.ogg",
+      "ttsText": "bowl",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-15ffadd0-7abe-4200-a47b-eba504d00303.png"
+    },
+    {
+      "id": "toothbrush",
+      "en": "Toothbrush",
+      "zh": "牙刷",
+      "pack": "d2_routine",
+      "level": "L1",
+      "group": "brush",
+      "anchor": "细柄+刷毛",
+      "image": "img_toothbrush.png",
+      "audio": "word_toothbrush.ogg",
+      "ttsText": "toothbrush",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-94d9642e-4b87-4db3-8762-ac17449fec5f.png"
+    },
+    {
+      "id": "towel",
+      "en": "Towel",
+      "zh": "毛巾",
+      "pack": "d2_routine",
+      "level": "L1",
+      "group": "cloth",
+      "anchor": "软布+织纹",
+      "image": "img_towel.png",
+      "audio": "word_towel.ogg",
+      "ttsText": "towel",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-ca0d20e3-a9e9-4be3-8579-7a62d5aee7db.png"
+    },
+    {
+      "id": "shoe",
+      "en": "Shoe",
+      "zh": "鞋子",
+      "pack": "d2_routine",
+      "level": "L1",
+      "group": "footwear",
+      "anchor": "鞋口+鞋底+鞋头",
+      "image": "img_shoe.png",
+      "audio": "word_shoe.ogg",
+      "ttsText": "shoe",
+      "existing": false,
+      "assetPipeline": "imagegen-transparent",
+      "imageSize": [
+        1254,
+        1254
+      ],
+      "imageSource": "Image Gen / exec-08b68f68-6d44-4fdf-89b3-a1bcd8e765e6.png"
+    }
+  ],
+  "categories": [
+    {
+      "id": "animals",
+      "name": "动物",
+      "en": "Animals",
+      "title": "动物朋友",
+      "hero": [
+        "cat",
+        "dog"
+      ]
+    },
+    {
+      "id": "fruit",
+      "name": "水果",
+      "en": "Fruit",
+      "title": "水果朋友",
+      "hero": [
+        "apple",
+        "banana"
+      ]
+    },
+    {
+      "id": "vehicles",
+      "name": "交通工具",
+      "en": "Vehicles",
+      "title": "出发啦",
+      "hero": [
+        "bus",
+        "car"
+      ]
+    },
+    {
+      "id": "everyday",
+      "name": "生活用品",
+      "en": "Everyday Things",
+      "title": "身边的小物品",
+      "hero": [
+        "cup",
+        "toothbrush"
+      ]
+    }
   ]
 }

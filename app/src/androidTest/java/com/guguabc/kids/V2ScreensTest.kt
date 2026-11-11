@@ -24,20 +24,16 @@ class V2ScreensTest {
     @get:Rule val rule = createComposeRule()
 
     private fun panel(
-        currentPackId: String = Words.P1,
         soundEnabled: Boolean = true,
         minutesUsed: Int = 3,
-        onSelectPack: (String) -> Unit = {},
         onResetToday: () -> Unit = {},
         onToggleSound: () -> Unit = {},
         onClose: () -> Unit = {},
     ) {
         rule.setGuguScreen {
             ParentPanelContent(
-                currentPackId = currentPackId,
                 soundEnabled = soundEnabled,
                 minutesUsed = minutesUsed,
-                onSelectPack = onSelectPack,
                 onResetToday = onResetToday,
                 onToggleSound = onToggleSound,
                 onClose = onClose,
@@ -57,7 +53,7 @@ class V2ScreensTest {
         rule.onNodeWithTag("sticker_grid").assertExists()
         rule.onNodeWithText(Strings.STICKER_BOOK_TITLE).assertExists()
         rule.onNodeWithText(Strings.STICKER_BOOK_HINT).assertExists()
-        Words.all.forEach { rule.onNodeWithTag("sticker_${it.id}").assertExists() }
+        Words.all.take(24).forEach { rule.onNodeWithTag("sticker_${it.id}").assertExists() }
         rule.onNodeWithTag("btn_back").assertExists()
     }
 
@@ -94,25 +90,27 @@ class V2ScreensTest {
 
     // ---- 家长面板 ----
     @Test
-    fun parentPanelRendersEightPacksAndParentOnlyNotices() {
+    fun parentPanelContainsOnlySettingsAndSpeechNotice() {
         panel()
-        rule.onNodeWithTag("pack_list").assertExists()
-        (1..8).forEach { rule.onNodeWithTag("pack_row_$it").assertExists() }
-        rule.onNodeWithText(Strings.PARENT_PANEL_TODAY_PACK).assertExists()
+        rule.onNodeWithTag("pack_list").assertDoesNotExist()
         rule.onNodeWithText(Strings.TTS_NOTICE_LINE).assertExists()
         rule.onNodeWithText(Strings.PARENT_PANEL_TODAY.format(3)).assertExists()
-        rule.onNodeWithText(Strings.PACK_LEVEL_L2).assertExists()
         rule.onNodeWithText(Strings.STATE_ON).assertExists()
     }
 
     @Test
-    fun selectingAPackForwardsItsIdAndReflectsSelectedCourse() {
-        var selected: String? = null
-        panel(currentPackId = Words.P1, onSelectPack = { selected = it })
-        rule.tap("pack_row_2")
-        assertEquals(Words.P2, selected)
-        panel(currentPackId = Words.P8)
-        rule.onNodeWithTag("pack_row_8").assertExists()
+    fun stickerCategoriesExposeNewWordsAndKeepUnlockRules() {
+        val played = mutableListOf<String>()
+        rule.setGuguScreen { StickerBookScreen(Words.all, setOf("apple", "car", "cup"), { played.add(it.id) }, {}) }
+        rule.tap("sticker_category_fruit")
+        rule.onNodeWithTag("sticker_cat").assertDoesNotExist()
+        rule.tap("sticker_apple")
+        rule.onNodeWithTag("sticker_banana").performTouchInput { click() }
+        rule.tap("sticker_category_vehicles")
+        rule.tap("sticker_car")
+        rule.tap("sticker_category_everyday")
+        rule.tap("sticker_cup")
+        assertEquals(listOf("apple", "car", "cup"), played)
     }
 
     @Test
@@ -123,6 +121,8 @@ class V2ScreensTest {
         rule.onNodeWithTag("btn_reset_today").performScrollTo()
         rule.tap("btn_reset_today")
         assertEquals(1, reset)
+        rule.mainClock.advanceTimeByFrame()
+        rule.waitForIdle()
         rule.onNodeWithText(Strings.RESET_DONE).assertExists()
         rule.mainClock.advanceTimeBy(2_100)
         rule.waitForIdle()
@@ -149,57 +149,27 @@ class V2ScreensTest {
         assertEquals(1, toggled)
     }
 
-    // ---- 家长门：短按不打开 / 长按 1.5s 打开 ----
+    // ---- 家长入口：普通点击立即打开，覆盖图标和文字入口 ----
     @Test
-    fun shortPressDoesNotOpenParentGate() {
+    fun tappingParentIconOpensImmediately() {
         var opened = 0
         rule.setGuguScreen {
-            ParentGateButton(
-                size = 72.dp, iconRes = R.drawable.ic_parent, iconSize = 36.dp,
-            ) { opened++ }
+            ParentGateButton(size = 72.dp, iconRes = R.drawable.ic_parent, iconSize = 36.dp) { opened++ }
         }
         rule.onNodeWithTag("btn_parent").performTouchInput { click() }
-        rule.waitForIdle()
-        assertEquals(0, opened)
-    }
-
-    @Test
-    fun longPressOpensParentGateAfter1500ms() {
-        var opened = 0
-        rule.mainClock.autoAdvance = false
-        rule.setGuguScreen {
-            ParentGateButton(
-                size = 72.dp, iconRes = R.drawable.ic_parent, iconSize = 36.dp,
-            ) { opened++ }
-        }
-        rule.waitForIdle()
-        rule.onNodeWithTag("btn_parent").performTouchInput {
-            down(center)
-            rule.mainClock.advanceTimeBy(1_600L)
-            up()
-        }
         rule.waitForIdle()
         assertEquals(1, opened)
     }
 
     @Test
-    fun releasingBefore1500msCancelsParentGate() {
+    fun tappingParentLabelOpensImmediately() {
         var opened = 0
-        rule.mainClock.autoAdvance = false
         rule.setGuguScreen {
-            ParentGateButton(
-                size = 72.dp, iconRes = R.drawable.ic_parent, iconSize = 36.dp,
-            ) { opened++ }
+            ParentGateButton(size = 64.dp, iconRes = R.drawable.ic_parent_sm, iconSize = 28.dp, label = Strings.PARENT) { opened++ }
         }
+        rule.onNodeWithText(Strings.PARENT, useUnmergedTree = true).performTouchInput { click() }
         rule.waitForIdle()
-        rule.onNodeWithTag("btn_parent").performTouchInput {
-            down(center)
-            rule.mainClock.advanceTimeBy(800L)
-            up()
-        }
-        rule.mainClock.advanceTimeBy(2_000L)
-        rule.waitForIdle()
-        assertEquals(0, opened)
+        assertEquals(1, opened)
     }
 
     // ---- 主按钮启用 / 禁用态分流 ----
