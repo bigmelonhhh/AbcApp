@@ -6,7 +6,11 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.core.app.ApplicationProvider
 import com.guguabc.kids.audio.AudioOutput
+import com.guguabc.kids.data.ColorActivity
+import com.guguabc.kids.data.ColorId
 import com.guguabc.kids.data.Words
+import com.guguabc.kids.state.ColorFeedback
+import com.guguabc.kids.state.GuguRoute
 import com.guguabc.kids.state.GuguNavHost
 import com.guguabc.kids.state.GuguPrefs
 import com.guguabc.kids.state.GuguSession
@@ -164,6 +168,45 @@ class SessionAudioLifecycleTest {
         advance(300)
         advance(11_000)
         rule.runOnIdle { assertEquals(listOf(R.raw.word_cat, R.raw.word_bear), audio.played) }
+    }
+
+    @Test
+    fun colorPromptSwitchesLanguageAndCancelsDemoInBackground() {
+        mount()
+        rule.runOnIdle {
+            session.openColors()
+            val menu = session.route as GuguRoute.ColorMenu
+            session.startColorActivity(menu, menu.group, ColorActivity.LISTEN)
+        }
+        advance(300)
+        val game = session.route as GuguRoute.ColorGame
+        val target = game.question.target
+        rule.runOnIdle {
+            assertEquals(target.bilingual, audio.current)
+            session.toggleColorChineseHelp()
+            session.playColorPrompt(game)
+            assertEquals(target.english, audio.current)
+            session.pickColor(game, game.question.options.single { it != target })
+            owner.lifecycle.currentState = Lifecycle.State.CREATED
+            assertNull(audio.current)
+        }
+        val count = audio.played.size
+        advance(11_000)
+        rule.runOnIdle {
+            session.playColor(ColorId.RED)
+            assertEquals(count, audio.played.size)
+            assertEquals(ColorFeedback.DEMO, (session.route as GuguRoute.ColorGame).feedback)
+            assertEquals(0, session.usedSeconds)
+            owner.lifecycle.currentState = Lifecycle.State.RESUMED
+        }
+        advance(300)
+        rule.runOnIdle { assertEquals(target.english, audio.current) }
+        advance(1_700)
+        rule.runOnIdle {
+            assertEquals(ColorFeedback.NONE, (session.route as GuguRoute.ColorGame).feedback)
+            session.back()
+            assertNull(audio.current)
+        }
     }
 
     @Test

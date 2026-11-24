@@ -8,6 +8,12 @@ import androidx.compose.runtime.setValue
 import com.guguabc.kids.R
 import com.guguabc.kids.audio.AudioOutput
 import com.guguabc.kids.audio.AudioPlayer
+import com.guguabc.kids.data.ColorActivity
+import com.guguabc.kids.data.ColorGroup
+import com.guguabc.kids.data.ColorId
+import com.guguabc.kids.data.ColorObject
+import com.guguabc.kids.data.ColorRound
+import com.guguabc.kids.data.colorRewards
 import com.guguabc.kids.data.Word
 import com.guguabc.kids.data.LearningCategory
 import com.guguabc.kids.data.WordPack
@@ -48,6 +54,13 @@ class GuguSession(
     var isReady: Boolean by mutableStateOf(false)
         private set
 
+    var colorChineseHelp: Boolean by mutableStateOf(true)
+        private set
+    var colorStickerIds: Set<String> by mutableStateOf(emptySet())
+        private set
+
+    private var colorSeed = 0
+    private var colorExampleOffset = 0
     private val budget = TimeBudget()
     private val history = ArrayDeque<GuguRoute>()
     private var foreground = false
@@ -56,7 +69,8 @@ class GuguSession(
 
     /** 只在认一认 / 听一听 / 答对啦累计「学习态时长」。 */
     private val isLearning: Boolean
-        get() = route is GuguRoute.Card || route is GuguRoute.Quiz || route is GuguRoute.Cheer
+        get() = route is GuguRoute.Card || route is GuguRoute.Quiz || route is GuguRoute.Cheer ||
+            route is GuguRoute.ColorLearn || route is GuguRoute.ColorGame
 
     val currentPack: WordPack get() = Words.of(currentPackId)
     val minutesUsed: Int get() = budget.minutesUsed
@@ -72,10 +86,109 @@ class GuguSession(
             soundEnabled = stored.soundEnabled
             currentPackId = Words.of(stored.currentPackId).id
             learnedWordIds = stored.learnedWordIds
+            colorChineseHelp = stored.colorChineseHelp
+            colorStickerIds = stored.colorStickerIds
             player.setEnabled(stored.soundEnabled)
             isReady = true
             persist()
         }
+    }
+
+    // ---- 颜色乐园 ----
+    fun openColors() {
+        if (route != GuguRoute.Home) return
+        history.clear()
+        changeColorRoute(GuguRoute.ColorMenu(ColorGroup.PRIMARY))
+    }
+
+    fun selectColorGroup(from: GuguRoute.ColorMenu, group: ColorGroup) {
+        if (route == from) changeColorRoute(from.copy(group = group))
+    }
+
+    fun chooseColorGame(from: GuguRoute.ColorMenu) {
+        if (route == from) changeColorRoute(from.copy(choosingGame = true))
+    }
+
+    fun startColorActivity(from: GuguRoute, group: ColorGroup, activity: ColorActivity) {
+        if (route != from || !canStartLesson(GuguRoute.ColorTimeUp(group, activity))) return
+        val next = if (activity == ColorActivity.LEARN) {
+            val offset = colorExampleOffset
+            colorExampleOffset = (offset + 1) % ColorObject.entries.size
+            GuguRoute.ColorLearn(group, 0, offset)
+        } else {
+            GuguRoute.ColorGame(ColorRound.create(group, activity, ++colorSeed))
+        }
+        changeColorRoute(next)
+    }
+
+    fun moveColorCard(from: GuguRoute.ColorLearn, delta: Int) {
+        if (route != from) return
+        val index = from.index + delta
+        if (index < 0) return
+        changeColorRoute(
+            if (index in from.group.colors.indices) from.copy(index = index)
+            else GuguRoute.ColorDone(from.group, ColorActivity.LEARN),
+        )
+    }
+
+    fun pickColor(from: GuguRoute.ColorGame, color: ColorId) {
+        if (route != from || from.feedback != ColorFeedback.NONE || color !in from.question.options) return
+        val correct = color == from.question.target
+        changeColorRoute(from.copy(feedback = if (correct) ColorFeedback.CORRECT else ColorFeedback.DEMO))
+        if (correct) playCheer() else playColor(from.question.target)
+    }
+
+    fun finishColorDemo(from: GuguRoute.ColorGame) {
+        if (route == from && from.feedback == ColorFeedback.DEMO) {
+            // Keep the word playing while the options become interactive again.
+            route = from.copy(feedback = ColorFeedback.NONE)
+        }
+    }
+
+    fun continueColorGame(from: GuguRoute.ColorGame) {
+        if (route != from || from.feedback != ColorFeedback.CORRECT) return
+        val round = from.round
+        if (from.index < round.questions.lastIndex) {
+            changeColorRoute(from.copy(index = from.index + 1, feedback = ColorFeedback.NONE))
+        } else {
+            colorStickerIds = colorRewards(colorStickerIds, round.group)
+            persist()
+            changeColorRoute(
+                GuguRoute.ColorDone(round.group, round.activity, round.takeIf { it.activity == ColorActivity.PAINT }),
+            )
+        }
+    }
+
+    fun returnToColors(from: GuguRoute, group: ColorGroup, choosingGame: Boolean = false) {
+        if (route == from) changeColorRoute(GuguRoute.ColorMenu(group, choosingGame))
+    }
+
+    fun playColor(color: ColorId) = playAudio(if (colorChineseHelp) color.bilingual else color.english)
+
+    fun playColorPrompt(from: GuguRoute) {
+        if (route != from) return
+        when (from) {
+            is GuguRoute.ColorLearn -> playColor(from.group.colors[from.index])
+            is GuguRoute.ColorGame -> when {
+                from.feedback == ColorFeedback.CORRECT -> Unit
+                from.feedback == ColorFeedback.DEMO -> playColor(from.question.target)
+                from.round.activity == ColorActivity.MATCH ->
+                    playAudio(if (colorChineseHelp) R.raw.color_match_zh else R.raw.color_match_en)
+                else -> playColor(from.question.target)
+            }
+            else -> Unit
+        }
+    }
+
+    fun toggleColorChineseHelp() {
+        if (!isReady) return
+        colorChineseHelp = !colorChineseHelp
+        persist()
+    }
+
+    private fun changeColorRoute(next: GuguRoute) {
+        route = next
+        player.stop()
     }
 
     // ---- 流程 ----
@@ -156,12 +269,12 @@ class GuguSession(
     }
 
     /** 恢复完成前不进入学习；每个入口先校正日期，再检查同一份每日额度。 */
-    private fun canStartLesson(): Boolean {
+    private fun canStartLesson(timeUpRoute: GuguRoute = GuguRoute.Done): Boolean {
         if (!isReady) return false
         updateBudget(isLearning = false)
         if (!budget.isTimeUp) return true
         history.clear()
-        route = GuguRoute.Done
+        route = timeUpRoute
         player.stop()
         return false
     }
@@ -182,7 +295,12 @@ class GuguSession(
     }
 
     fun back() {
-        when (route) {
+        when (val current = route) {
+            is GuguRoute.ColorMenu -> route = if (current.choosingGame) current.copy(choosingGame = false) else GuguRoute.Home
+            is GuguRoute.ColorLearn -> route = GuguRoute.ColorMenu(current.group)
+            is GuguRoute.ColorGame -> route = GuguRoute.ColorMenu(current.round.group)
+            is GuguRoute.ColorDone -> route = GuguRoute.ColorMenu(current.group)
+            is GuguRoute.ColorTimeUp -> route = GuguRoute.ColorMenu(current.group)
             // CHEER 的返回不回退到答题中途，避免「再来一次骗时长」
             is GuguRoute.Cheer -> {
                 history.clear()
@@ -250,7 +368,11 @@ class GuguSession(
         if (result.shouldPersist) persist()
         if (result.timeUp) {
             history.clear()
-            route = GuguRoute.Done
+            route = when (val current = route) {
+                is GuguRoute.ColorLearn -> GuguRoute.ColorTimeUp(current.group, ColorActivity.LEARN)
+                is GuguRoute.ColorGame -> GuguRoute.ColorTimeUp(current.round.group, current.round.activity)
+                else -> GuguRoute.Done
+            }
             player.stop()
         }
     }
@@ -277,6 +399,8 @@ class GuguSession(
                     usedSeconds = budget.seconds,
                     currentPackId = currentPackId,
                     learnedWordIds = learnedWordIds,
+                    colorChineseHelp = colorChineseHelp,
+                    colorStickerIds = colorStickerIds,
                 ),
             )
         }

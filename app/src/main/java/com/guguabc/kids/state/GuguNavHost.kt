@@ -1,6 +1,7 @@
 package com.guguabc.kids.state
 
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.guguabc.kids.data.Words
+import com.guguabc.kids.screens.ColorGameScreen
+import com.guguabc.kids.screens.ColorLearnScreen
+import com.guguabc.kids.screens.ColorMenuScreen
+import com.guguabc.kids.screens.ColorResultScreen
 import com.guguabc.kids.screens.CheerScreen
 import com.guguabc.kids.screens.DoneScreen
 import com.guguabc.kids.screens.HomeScreen
@@ -48,6 +53,34 @@ internal fun GuguNavHost(session: GuguSession, lifecycle: Lifecycle?, onRest: ()
         while (true) {
             delay(1_000L)
             if (foreground) session.tick()
+        }
+    }
+
+    val currentRoute = session.route
+    val colorRoute = currentRoute is GuguRoute.ColorMenu || currentRoute is GuguRoute.ColorLearn ||
+        currentRoute is GuguRoute.ColorGame || currentRoute is GuguRoute.ColorDone ||
+        currentRoute is GuguRoute.ColorTimeUp
+    BackHandler(enabled = colorRoute || session.parentPanelVisible) {
+        if (session.parentPanelVisible) session.closeParentPanel() else session.back()
+    }
+
+    val promptRoute = if (currentRoute is GuguRoute.ColorGame) {
+        currentRoute.copy(feedback = ColorFeedback.NONE)
+    } else currentRoute
+
+    LaunchedEffect(session, promptRoute, foreground, session.isReady, session.parentPanelVisible) {
+        if (foreground && session.isReady && !session.parentPanelVisible &&
+            (promptRoute is GuguRoute.ColorLearn || promptRoute is GuguRoute.ColorGame)
+        ) {
+            session.playColorPrompt(session.route)
+        }
+    }
+    LaunchedEffect(session, currentRoute, foreground, session.parentPanelVisible) {
+        if (foreground && !session.parentPanelVisible &&
+            currentRoute is GuguRoute.ColorGame && currentRoute.feedback == ColorFeedback.DEMO
+        ) {
+            delay(1_500L)
+            session.finishColorDemo(currentRoute)
         }
     }
 
@@ -112,6 +145,31 @@ internal fun GuguNavHost(session: GuguSession, lifecycle: Lifecycle?, onRest: ()
                     onCategory = session::openCategory,
                     onStickerBook = session::openStickerBook,
                     onParentGate = session::openParentPanel,
+                    onColors = session::openColors,
+                )
+
+                is GuguRoute.ColorMenu -> ColorMenuScreen(route, session)
+                is GuguRoute.ColorLearn -> ColorLearnScreen(route, session)
+                is GuguRoute.ColorGame -> ColorGameScreen(route, session)
+                is GuguRoute.ColorDone -> ColorResultScreen(
+                    group = route.group,
+                    activity = route.activity,
+                    painting = route.painting?.questions?.map { it.target },
+                    timeUp = false,
+                    session = session,
+                    onReplay = { session.startColorActivity(route, route.group, route.activity) },
+                    onChoose = { session.returnToColors(route, route.group, choosingGame = true) },
+                    onRest = onRest,
+                )
+                is GuguRoute.ColorTimeUp -> ColorResultScreen(
+                    group = route.group,
+                    activity = route.activity,
+                    painting = null,
+                    timeUp = true,
+                    session = session,
+                    onReplay = { session.startColorActivity(route, route.group, route.activity) },
+                    onChoose = { session.returnToColors(route, route.group, choosingGame = true) },
+                    onRest = onRest,
                 )
 
                 is GuguRoute.Lessons -> LessonSelectionScreen(
@@ -174,6 +232,8 @@ internal fun GuguNavHost(session: GuguSession, lifecycle: Lifecycle?, onRest: ()
                     words = Words.all,
                     learnedIds = session.learnedWordIds,
                     initialCategory = session.currentPack.category,
+                    colorStickerIds = session.colorStickerIds,
+                    onPlayColor = session::playColor,
                     onPlay = session::playWord,
                     onBack = session::back,
                 )

@@ -2,6 +2,8 @@ package com.guguabc.kids
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.guguabc.kids.data.ColorActivity
+import com.guguabc.kids.data.ColorGroup
 import com.guguabc.kids.data.Words
 import com.guguabc.kids.state.GuguPrefs
 import com.guguabc.kids.state.GuguRoute
@@ -196,6 +198,63 @@ class SessionLimitTest {
                 assertEquals(GuguRoute.Lessons(pack.category), session.route)
             }
             assertEquals(setOf("cat") + newPacks.flatMap { it.words }.map { it.id }, session.learnedWordIds)
+        }
+    }
+
+    @Test
+    fun colorsShareWordLimitAndIncompletePaintingDoesNotUnlockStickers() = runBlocking {
+        loadSession(usedSeconds = 298, learned = setOf("cat"))
+        withContext(Dispatchers.Main) {
+            session.startPack(Words.P1)
+            session.tick()
+            session.back()
+            session.openColors()
+            val menu = session.route as GuguRoute.ColorMenu
+            repeat(5) { session.tick() }
+            assertEquals(299, session.usedSeconds)
+            session.startColorActivity(menu, menu.group, ColorActivity.PAINT)
+            val game = session.route as GuguRoute.ColorGame
+            session.pickColor(game, game.question.target)
+            val feedback = session.route as GuguRoute.ColorGame
+            session.tick()
+            val limit = GuguRoute.ColorTimeUp(menu.group, ColorActivity.PAINT)
+            assertEquals(limit, session.route)
+            session.continueColorGame(feedback)
+            session.startColorActivity(limit, menu.group, ColorActivity.PAINT)
+            assertEquals(limit, session.route)
+            assertEquals(300, session.usedSeconds)
+            assertTrue(session.colorStickerIds.isEmpty())
+            assertEquals(setOf("cat"), session.learnedWordIds)
+            session.back()
+            session.back()
+            session.startPack(Words.P1)
+            assertEquals(GuguRoute.Done, session.route)
+        }
+    }
+
+    @Test
+    fun colorEntryWaitsForRestoreAndExpiredDayAllowsNewRound() = runBlocking {
+        Prefs.write(context, GuguPrefs(
+            todayDate = LocalDate.now().minusDays(1).toString(), usedSeconds = 300,
+            colorChineseHelp = false, colorStickerIds = setOf("green"), learnedWordIds = setOf("cat"),
+        ))
+        withContext(Dispatchers.Main) {
+            session = GuguSession(context, scope)
+            session.openColors()
+            val menu = session.route as GuguRoute.ColorMenu
+            session.startColorActivity(menu, menu.group, ColorActivity.LEARN)
+            assertEquals(menu, session.route)
+        }
+        awaitReady()
+        withContext(Dispatchers.Main) {
+            assertFalse(session.colorChineseHelp)
+            assertEquals(setOf("green"), session.colorStickerIds)
+            assertEquals(setOf("cat"), session.learnedWordIds)
+            assertEquals(0, session.usedSeconds)
+            val menu = session.route as GuguRoute.ColorMenu
+            assertEquals(ColorGroup.PRIMARY, menu.group)
+            session.startColorActivity(menu, menu.group, ColorActivity.LEARN)
+            assertTrue(session.route is GuguRoute.ColorLearn)
         }
     }
 

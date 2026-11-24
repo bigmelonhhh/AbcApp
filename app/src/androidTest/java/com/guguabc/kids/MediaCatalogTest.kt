@@ -3,6 +3,7 @@ package com.guguabc.kids
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import androidx.test.core.app.ApplicationProvider
+import com.guguabc.kids.data.ColorId
 import com.guguabc.kids.data.Words
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -11,6 +12,24 @@ import org.junit.Test
 /** Validate the actual packaged resources with Android decoders, not just filenames. */
 class MediaCatalogTest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+
+    @Test
+    fun offlineColorAudioCanPlayAndHasExpectedNames() {
+        val names = ColorId.entries.flatMap {
+            listOf("color_${it.id}_en" to it.english, "color_${it.id}_bilingual" to it.bilingual)
+        } + listOf("color_match_en" to R.raw.color_match_en, "color_match_zh" to R.raw.color_match_zh)
+        assertEquals(14, names.map { it.second }.toSet().size)
+        names.forEach { (name, resource) ->
+            assertEquals(name, context.resources.getResourceEntryName(resource))
+            val media = android.media.MediaPlayer.create(context, resource)
+                ?: error("Could not decode $name")
+            try {
+                assertTrue("$name invalid speech duration: ${media.duration}", media.duration in 300..5000)
+            } finally {
+                media.release()
+            }
+        }
+    }
 
     @Test
     fun everyWordHasItsOwnDecodablePictureAndOfflinePronunciation() {

@@ -199,7 +199,7 @@ def main() -> int:
         "给爸爸妈妈", "点击右上角「家长」可设置每日时长", "今天到这里",
         # V2
         "3 个新词 · 约 2 分钟", "看看我的贴纸册", "我的贴纸",
-        "点一点，再听一次", "今日课程", "大朋友", "单词发音由电脑合成",
+        "点一点，再听一次", "今日课程", "大朋友", "词汇使用合成语音，颜色乐园含中英文合成语音。",
     ]
     missing_strings = [s for s in required_strings if s not in strings]
     check("#9 文案逐字齐备（V1 冻结 + V2）", not missing_strings, ", ".join(missing_strings))
@@ -228,7 +228,7 @@ def main() -> int:
     try:
         from fontTools.ttLib import TTFont
         need = set()
-        for p in (JAVA / "data" / "Strings.kt", JAVA / "data" / "Words.kt"):
+        for p in (JAVA / "data" / name for name in ("Strings.kt", "Words.kt", "ColorLearning.kt")):
             for lit in re.findall(r'"((?:[^"\\]|\\.)*)"', p.read_text(encoding="utf-8")):
                 need.update(lit)
         need.update(chr(c) for c in range(0x20, 0x7F))
@@ -239,9 +239,9 @@ def main() -> int:
                 continue
             cmap = TTFont(str(RES / "font" / name)).getBestCmap()
             miss += [f"{name}:{c}" for c in need if ord(c) not in cmap]
-        check("#6 中文字体无缺字（V2 42 词）", not miss, ", ".join(miss[:6]))
+        check("#6 中文字体覆盖词汇与颜色文案", not miss, ", ".join(miss[:6]))
     except ImportError:
-        check("#6 中文字体无缺字（V2 42 词）", True, "fontTools 不可用，跳过")
+        check("#6 中文字体覆盖词汇与颜色文案", True, "fontTools 不可用，跳过")
 
     # ---- #10 #11 图标 ----
     vectors = sorted(p.stem for p in (RES / "drawable").glob("*.xml"))
@@ -265,9 +265,16 @@ def main() -> int:
     check("#10 43 张插画按 42 词表落盘", illustrations == expected_images,
           ",".join(set(illustrations) ^ set(expected_images)))
 
-    expected_ogg = sorted(["cheer.ogg", "tap.ogg"] + [w["audio"] for w in words])
+    from prepare_color_audio import COLORS, MATCH_PROMPTS
+
+    color_audio = [f"color_{name}_{mode}.ogg" for name in COLORS for mode in ("en", "bilingual")]
+    color_audio += [f"color_match_{lang}.ogg" for lang in MATCH_PROMPTS]
+    color_references = set(re.findall(r"R\.raw\.(color_\w+)", src))
+    check("#V2.1 颜色语音目录与实际引用一致",
+          color_references == {Path(name).stem for name in color_audio})
+    expected_ogg = sorted(["cheer.ogg", "tap.ogg"] + [w["audio"] for w in words] + color_audio)
     ogg = sorted(p.name for p in (RES / "raw").glob("*.ogg"))
-    check("#14 44 条本地 OGG（42 词 + cheer/tap）", ogg == expected_ogg,
+    check("#14 本地 OGG 完整（42 词、14 条颜色提示、cheer/tap）", ogg == expected_ogg,
           ",".join(set(ogg) ^ set(expected_ogg)))
     check("#14 OGG 头正确", all((RES / "raw" / n).read_bytes()[:4] == b"OggS" for n in ogg))
     check("#14 无 TTS / 网络音频",
@@ -451,7 +458,7 @@ def main() -> int:
     done = read("screens/DoneScreen.kt")
     primary = read("design/components/PrimaryButton.kt")
 
-    check("#FIX 计时只在 Card/Quiz/Cheer 累加",
+    check("#FIX 计时只在词汇与颜色学习页累加",
           "budget.tick(isLearning" in session_code
           and "if (!isLearning) return" in tick_block
           and "seconds++" in tick_block

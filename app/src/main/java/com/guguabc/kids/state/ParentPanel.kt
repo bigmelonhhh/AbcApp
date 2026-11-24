@@ -48,6 +48,8 @@ fun ParentPanel(session: GuguSession, onClose: () -> Unit) {
         onResetToday = session::resetTodayTime,
         onToggleSound = session::toggleSound,
         onClose = onClose,
+        colorChineseHelp = session.colorChineseHelp,
+        onToggleColorHelp = session::toggleColorChineseHelp,
     )
 }
 
@@ -63,6 +65,8 @@ fun ParentPanelContent(
     onResetToday: () -> Unit,
     onToggleSound: () -> Unit,
     onClose: () -> Unit,
+    colorChineseHelp: Boolean = true,
+    onToggleColorHelp: () -> Unit = {},
 ) {
     LaunchedEffect(Unit) {
         delay(20_000L)
@@ -151,7 +155,19 @@ fun ParentPanelContent(
                 GuguType.panelValue,
             )
 
-            // design_v2.md §8：合成语音需向家长明示，不放在宝宝侧
+            Row(
+                Modifier.fillMaxWidth().height(GuguDimens.menuChipHeight)
+                    .guguClick(tag = "btn_color_help", onClick = onToggleColorHelp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                GuguText(Strings.COLOR_SETTINGS, GuguType.panelLabel)
+                GuguText(
+                    if (colorChineseHelp) Strings.COLOR_CHINESE else Strings.COLOR_ENGLISH,
+                    GuguType.panelValue,
+                )
+            }
+
             GuguText(Strings.TTS_NOTICE_LINE, GuguType.ttsNotice)
 
             Box(

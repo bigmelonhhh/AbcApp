@@ -23,7 +23,7 @@ class ScreensTest {
     @Test
     fun homeShowsFourCategoriesAndForwardsSelection() {
         val selected = mutableListOf<com.guguabc.kids.data.LearningCategory>()
-        rule.setGuguScreen { HomeScreen(onCategory = { selected.add(it) }, onStickerBook = {}, onParentGate = {}) }
+        rule.setGuguScreen { HomeScreen(onCategory = { selected.add(it) }, onStickerBook = {}, onParentGate = {}, onColors = {}) }
         rule.onNodeWithText(Strings.EXPLORE_TITLE).assertExists()
         com.guguabc.kids.data.LearningCategory.entries.forEach {
             rule.onNodeWithText(it.title).assertExists()
@@ -35,7 +35,7 @@ class ScreensTest {
     @Test
     fun homeStickerBookEntryIsDirectlyAvailable() {
         var opened = 0
-        rule.setGuguScreen { HomeScreen(onCategory = {}, onStickerBook = { opened++ }, onParentGate = {}) }
+        rule.setGuguScreen { HomeScreen(onCategory = {}, onStickerBook = { opened++ }, onParentGate = {}, onColors = {}) }
         rule.tap("btn_sticker_book")
         assertEquals(1, opened)
     }

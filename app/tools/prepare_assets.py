@@ -180,7 +180,7 @@ def build_icons() -> int:
 # ---------------------------------------------------------------- 字体
 def collect_text() -> str:
     chars: set[str] = set()
-    for p in (JAVA / "data" / "Strings.kt", JAVA / "data" / "Words.kt"):
+    for p in (JAVA / "data" / name for name in ("Strings.kt", "Words.kt", "ColorLearning.kt")):
         if not p.exists():
             continue
         for lit in re.findall(r'"((?:[^"\\]|\\.)*)"', p.read_text(encoding="utf-8")):

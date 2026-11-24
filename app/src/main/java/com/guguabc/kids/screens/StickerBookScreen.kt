@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.key
+import com.guguabc.kids.data.ColorId
+import com.guguabc.kids.data.ColorObject
 import com.guguabc.kids.data.LearningCategory
 import com.guguabc.kids.data.Words
 import androidx.compose.ui.Alignment
@@ -27,6 +30,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.guguabc.kids.R
 import com.guguabc.kids.data.Strings
 import com.guguabc.kids.data.Word
@@ -52,8 +57,10 @@ fun StickerBookScreen(
     onPlay: (Word) -> Unit,
     onBack: () -> Unit,
     initialCategory: LearningCategory = LearningCategory.ANIMALS,
+    colorStickerIds: Set<String> = emptySet(),
+    onPlayColor: (ColorId) -> Unit = {},
 ) {
-    var category by remember { mutableStateOf(initialCategory) }
+    var category: LearningCategory? by remember { mutableStateOf(initialCategory) }
     val visibleWords = words.filter { Words.of(it.packId).category == category }
     GuguScreenContainer(background = GuguTheme.colors.background, tag = "screen_sticker_book") {
         Column(
@@ -64,7 +71,10 @@ fun StickerBookScreen(
         ) {
             GuguText(Strings.STICKER_BOOK_TITLE, GuguType.stickerBookTitle)
             Spacer(Modifier.height(GuguDimens.stickerBookHintGap))
-            GuguText(Strings.STICKER_BOOK_HINT, GuguType.stickerBookHint)
+            GuguText(
+                if (category == null) Strings.COLOR_RECORD else Strings.STICKER_BOOK_HINT,
+                GuguType.stickerBookHint,
+            )
             Spacer(Modifier.height(GuguDimens.menuHeaderGap))
             Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.menuTextGap)) {
                 LearningCategory.entries.forEach { item ->
@@ -79,6 +89,16 @@ fun StickerBookScreen(
                         GuguText(item.title, GuguType.categoryAction)
                     }
                 }
+                Row(
+                    Modifier.size(GuguDimens.menuChipWidth, GuguDimens.menuChipHeight)
+                        .background(if (category == null) GuguColor.colorWorld else GuguColor.surface, RoundedCornerShape(GuguDimens.menuCardRadius))
+                        .guguClick(tag = "sticker_category_colors") { category = null },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    ColorBalloons(showcaseColors, Modifier.size(GuguDimens.menuChipIcon))
+                    GuguText(Strings.COLOR_WORLD, GuguType.categoryAction)
+                }
             }
             Spacer(Modifier.height(GuguDimens.menuHeaderGap))
 
@@ -87,6 +107,29 @@ fun StickerBookScreen(
                 verticalArrangement = Arrangement.spacedBy(GuguDimens.stickerBookGap),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                if (category == null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.stickerBookGap)) {
+                        ColorId.entries.forEach { color ->
+                            val unlocked = color.id in colorStickerIds
+                            val label = if (unlocked) color.zh else Strings.COLOR_STICKER_LOCKED.format(color.zh)
+                            Column(
+                                Modifier.width(GuguDimens.colorStickerWidth)
+                                    .background(GuguColor.surface, RoundedCornerShape(GuguDimens.stickerBookRadius))
+                                    .semantics { contentDescription = label }
+                                    .guguClick(tag = "sticker_color_${color.id}", enabled = unlocked) { onPlayColor(color) }
+                                    .padding(GuguDimens.menuHeaderGap),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                ColorArt(
+                                    ColorObject.BALLOON, color.swatch,
+                                    Modifier.size(GuguDimens.menuStickerArt)
+                                        .alpha(if (unlocked) 1f else GuguDimens.stickerBookLockedAlpha),
+                                )
+                                GuguText(color.zh, GuguType.categoryAction)
+                            }
+                        }
+                    }
+                }
                 visibleWords.chunked(GuguDimens.stickerBookColumns).forEach { rowWords ->
                     Row(horizontalArrangement = Arrangement.spacedBy(GuguDimens.stickerBookGap)) {
                         rowWords.forEach { word ->

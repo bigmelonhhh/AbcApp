@@ -25,6 +25,8 @@ data class GuguPrefs(
     val usedSeconds: Int = 0,
     val currentPackId: String = Words.DEFAULT_PACK_ID,
     val learnedWordIds: Set<String> = emptySet(),
+    val colorChineseHelp: Boolean = true,
+    val colorStickerIds: Set<String> = emptySet(),
 )
 
 object Prefs {
@@ -33,6 +35,8 @@ object Prefs {
     private val USED = intPreferencesKey("used_seconds")
     private val PACK = stringPreferencesKey("current_pack_id")
     private val LEARNED = stringSetPreferencesKey("learned_word_ids")
+    private val COLOR_HELP = booleanPreferencesKey("color_chinese_help")
+    private val COLOR_STICKERS = stringSetPreferencesKey("color_sticker_ids")
 
     suspend fun read(context: Context): GuguPrefs = context.guguDataStore.data.first().let { p ->
         GuguPrefs(
@@ -41,6 +45,8 @@ object Prefs {
             usedSeconds = p[USED] ?: 0,
             currentPackId = p[PACK] ?: Words.DEFAULT_PACK_ID,
             learnedWordIds = p[LEARNED]?.toSet() ?: emptySet(),
+            colorChineseHelp = p[COLOR_HELP] ?: true,
+            colorStickerIds = p[COLOR_STICKERS]?.toSet() ?: emptySet(),
         )
     }
 
@@ -51,6 +57,8 @@ object Prefs {
             p[USED] = value.usedSeconds
             p[PACK] = value.currentPackId
             p[LEARNED] = value.learnedWordIds.toSet()
+            p[COLOR_HELP] = value.colorChineseHelp
+            p[COLOR_STICKERS] = value.colorStickerIds.toSet()
         }
     }
 }

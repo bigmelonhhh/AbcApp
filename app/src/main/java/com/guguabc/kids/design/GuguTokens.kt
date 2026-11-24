@@ -16,6 +16,17 @@ import com.guguabc.kids.R
  */
 
 object GuguColor {
+    val colorWorld = Color(0xFFF1E5FC)
+    val learningRed = Color(0xFFDB373E)
+    val learningYellow = Color(0xFFF3D33B)
+    val learningBlue = Color(0xFF2871DB)
+    val learningGreen = Color(0xFF32A354)
+    val learningOrange = Color(0xFFF48B24)
+    val learningPurple = Color(0xFF853EC0)
+    val artOutline = Color(0xFF544254)
+    val artWheel = Color(0xFF504456)
+    val artWindow = Color(0xFFF4FAFF)
+    val artShine = Color(0x66FFFFFF)
     val fruitCard = Color(0xFFE8F3D9)
     val vehicleCard = Color(0xFFE1F1FA)
     val everydayCard = Color(0xFFFBE5D8)
@@ -116,6 +127,21 @@ object GuguType {
 }
 
 object GuguDimens {
+    val colorHomeHero = 250.dp
+    val colorHomeMiniArt = 110.dp
+    val colorHomeMiniCard = 204.dp
+    val colorGroupWidth = 272.dp
+    val colorMenuCard = 314.dp
+    val colorMenuArt = 128.dp
+    val colorSwatch = 80.dp
+    val colorArtLarge = 280.dp
+    val colorExample = 156.dp
+    val colorChoiceArt = 124.dp
+    val colorChoiceWidth = 270.dp
+    val colorChoiceHeight = 164.dp
+    val colorActionWidth = 222.dp
+    val colorBorder = 4.dp
+    val colorStickerWidth = 146.dp
     // V2 分类首页 / 自主选课：1280 × 800 横屏。
     val menuPadding = 48.dp
     val menuHeaderHeight = 64.dp

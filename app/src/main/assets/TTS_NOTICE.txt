@@ -13,6 +13,13 @@
 格式：22050 Hz 单声道 OGG Vorbis；前后各 120ms 静音，峰值归一化 -3dBFS。
 词表与音频名称见 tools/word_packs.json。
 
+V2.1 颜色乐园新增 14 条本地 OGG。英语沿用 en_US-lessac-medium，
+普通话使用 zh_CN-huayan-medium。英文档播放单词或同色配对指令，
+中文辅助档播放“中文颜色名 → 英文颜色名”，同色配对指令使用普通话。
+双语在构建前合成一个文件。生成脚本见 tools/prepare_color_audio.py。
+普通话模型卡将训练数据许可标为 Unknown：
+https://huggingface.co/rhasspy/piper-voices/blob/217ddc79818708b078d0d14a8fae9608b9d77141/zh/zh_CN/huayan/medium/MODEL_CARD
+
 来源与许可记录
 --------------
 生成引擎对应版本许可证为 MIT（引擎及模型均不随 APK 分发）：
